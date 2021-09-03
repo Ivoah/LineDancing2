@@ -3,7 +3,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 import scala.swing._
 
 object LineDancing extends MainFrame with App {
-  val visualizer = new Visualizer(Dance(new File(getClass.getResource(s"Hole in the Wall.txt").toURI)))
+  val visualizer = new Visualizer(Dance(getClass.getResourceAsStream(s"Hole in the Wall.txt")))
 
   menuBar = new MenuBar {
     contents ++= Seq(

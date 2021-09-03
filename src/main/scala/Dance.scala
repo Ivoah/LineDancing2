@@ -1,13 +1,13 @@
-import java.io.File
+import java.io.{InputStream, BufferedInputStream}
 import javax.sound.sampled._
 import scala.io.Source
 
 object Dance {
-  def apply(file: File): Dance = {
-    val source = Source.fromFile(file)
+  def apply(file: InputStream): Dance = {
+    val source = Source.fromInputStream(file)
     val lines = source.getLines()
 
-    val song = lines.next() match { case s"Song: ${song}" => new File(song) }
+    val song = lines.next() match { case s"Song: ${song}" => song }
     val start = lines.next() match { case s"Start: ${start}" => start.toInt }
     val speed = lines.next() match { case s"Speed: ${speed}" => speed.toDouble }
 
@@ -27,10 +27,7 @@ object Dance {
         Some(pair)
     }.toMap
 
-    val inputStream = AudioSystem.getAudioInputStream(
-      if (song.isAbsolute) song
-      else file.toPath.getParent.resolve(song.toPath).toFile
-    )
+    val inputStream = AudioSystem.getAudioInputStream(new BufferedInputStream(getClass.getResourceAsStream(song)))
     val clip: Clip = AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip]
     clip.open(inputStream)
 
