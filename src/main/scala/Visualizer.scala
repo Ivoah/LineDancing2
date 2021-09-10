@@ -72,7 +72,7 @@ class Visualizer(val dance: Dance) extends BorderPanel {
     g.setTransform(transform)
 
     dance.steps.get(range).foreach(_.zipWithIndex.foreach { case (step, i) =>
-      g.drawString(f"${step._1}: ${progress*100}%.2f%%", 3, 20*(i + 1))
+      g.drawString(f"${step._1} (${range.length} count${if (range.length == 1) "" else "s"}): ${progress*100}%.2f%%", 3, 20*(i + 1))
     })
   }
 
