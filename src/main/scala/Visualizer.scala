@@ -32,11 +32,17 @@ class Visualizer(val dance: Dance) extends BorderPanel {
       val steps = dance.steps.getOrElse(range, Seq())
       if (range != last_range) {
         if (range.start < last_range.start) {
-          println("Progression!")
+          val sitting = dancers.exists(_.sitting)
           for (dancer <- dancers) {
-            if (dancer.couple%2 == 0) dancer.couple += 2
-            else dancer.couple -= 2
-            dancer.sitting = dancer.couple < 0 || dancer.couple >= NUM_COUPLES
+            if (sitting) {
+              if (dancer.sitting) {
+                dancer.couple += 1
+                dancer.sitting = false
+              } else if (dancer.couple%2 == 0) dancer.couple += 2
+            } else {
+              if (dancer.couple%2 != 0) dancer.couple -= 2
+              if (dancer.couple == -1 || dancer.couple == NUM_COUPLES - 2) dancer.sitting = true
+            }
           }
         }
         for (dancer <- dancers) {
@@ -58,7 +64,7 @@ class Visualizer(val dance: Dance) extends BorderPanel {
 
     val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000)
     val range = dance.range_at(count).getOrElse(0 until 0)
-    val progress = (count - range.start)/range.length
+    val progress = (count%dance.length - range.start)/range.length
 
     val transform = g.getTransform
     g.translate(ROOT)

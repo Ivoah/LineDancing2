@@ -8,11 +8,13 @@ case class Dancer(var couple: Int, woman: Boolean, name: String) {
   val WIDTH = 50
   val HEIGHT = 25
 
+  private val name_color = Color.BLACK
   private val body_color = if (woman) new Color(255, 105, 180) else new Color(0, 0, 255)
   private val head_color = body_color.darker
 
-  private val body_color_sitting = body_color.withAlpha(127)
-  private val head_color_sitting = head_color.withAlpha(127)
+  private val name_color_sitting = Color.BLACK.withAlpha(64)
+  private val body_color_sitting = body_color.withAlpha(64)
+  private val head_color_sitting = head_color.withAlpha(64)
 
   private var pos: ((Double, Double), Double) = ((couple, if (woman) 0 else 1), if (woman) 0 else math.Pi)
   private var step: Steps.Step = Steps.emptyStep
@@ -37,16 +39,18 @@ case class Dancer(var couple: Int, woman: Boolean, name: String) {
         g.rotate(pos._2)
     }
 
+    g.setPaint(if (sitting) name_color_sitting else name_color)
     g.drawString(name, -WIDTH/2, -HEIGHT/2)
-//    g.drawRect(-WIDTH/2, -HEIGHT/2, WIDTH, HEIGHT)
 
     g.setPaint(if (sitting) body_color_sitting else body_color)
     g.fillOval(-WIDTH/2, -HEIGHT*3/10, WIDTH, HEIGHT*3/5)
     g.setPaint(if (sitting) head_color_sitting else head_color)
     g.fillOval(-HEIGHT/2, -HEIGHT/2, HEIGHT, HEIGHT)
 
-    g.setPaint(Color.WHITE)
-    g.drawString(couple.toString, -4, 5)
+    if (!sitting) {
+      g.setPaint(Color.WHITE)
+      g.drawString((couple % 2 + 1).toString, -4, 5)
+    }
 
     g.setTransform(transform)
     g.setPaint(paint)
