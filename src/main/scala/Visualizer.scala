@@ -8,7 +8,7 @@ import Implicits._
 class Visualizer(val dance: Dance) extends BorderPanel {
   peer.getFontMetrics(peer.getFont) // Load font into memory to avoid hang on first drawString call
 
-  private val NUM_COUPLES = 8
+  private val NUM_COUPLES = 6
   private val SCALE: (Double, Double) = (100, 150)
   private def ROOT: (Double, Double) = (
     (size.width - (NUM_COUPLES - 1)*SCALE._1)/2,
@@ -31,8 +31,19 @@ class Visualizer(val dance: Dance) extends BorderPanel {
       val range = dance.range_at(count).getOrElse(0 until 0)
       val steps = dance.steps.getOrElse(range, Seq())
       if (range != last_range) {
-        dancers.foreach { dancer =>
-          dancer.change_step(steps.find(_._2(dancer, 0).nonEmpty).map(_._2).getOrElse(Steps.emptyStep))
+        if (range.start < last_range.start) {
+          println("Progression!")
+          for (dancer <- dancers) {
+            if (dancer.couple%2 == 0) dancer.couple += 2
+            else dancer.couple -= 2
+            dancer.sitting = dancer.couple < 0 || dancer.couple >= NUM_COUPLES
+          }
+        }
+        for (dancer <- dancers) {
+          dancer.change_step(
+            if (dancer.sitting) Steps.emptyStep
+            else steps.find(_._2(dancer, 0).nonEmpty).map(_._2).getOrElse(Steps.emptyStep)
+          )
         }
         last_range = range
       }

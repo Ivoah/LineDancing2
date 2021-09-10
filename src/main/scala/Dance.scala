@@ -39,7 +39,7 @@ object Dance {
   }
 }
 
-case class Dance(val steps: Map[Range, Seq[(String, Steps.Step)]], song: Clip, start: Int, speed: Double, length: Int) {
+case class Dance(steps: Map[Range, Seq[(String, Steps.Step)]], song: Clip, start: Int, speed: Double, length: Int) {
   def ms_to_count(ms: Double): Double = (ms - start)/speed
   def count_to_ms(count: Double): Int = (count*speed).toInt + start
   def range_at(count: Double): Option[Range] = steps.keys.find(range => range.start <= count%length && count%length < range.end)

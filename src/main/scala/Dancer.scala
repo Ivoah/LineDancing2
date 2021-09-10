@@ -45,6 +45,9 @@ case class Dancer(var couple: Int, woman: Boolean, name: String) {
     g.setPaint(if (sitting) head_color_sitting else head_color)
     g.fillOval(-HEIGHT/2, -HEIGHT/2, HEIGHT, HEIGHT)
 
+    g.setPaint(Color.WHITE)
+    g.drawString(couple.toString, -4, 5)
+
     g.setTransform(transform)
     g.setPaint(paint)
 
