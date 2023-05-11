@@ -3,7 +3,7 @@ import scala.swing.event._
 import scala.util.Random
 import javax.swing.Timer
 
-import Implicits._
+import Extensions._
 
 class Visualizer(val dance: Dance) extends BorderPanel {
   peer.getFontMetrics(peer.getFont) // Load font into memory to avoid hang on first drawString call
@@ -74,6 +74,9 @@ class Visualizer(val dance: Dance) extends BorderPanel {
     dance.steps.get(range).foreach(_.zipWithIndex.foreach { case (step, i) =>
       g.drawString(f"${step._1} (${range.length} count${if (range.length == 1) "" else "s"}): ${progress*100}%.2f%%", 3, 20*(i + 1))
     })
+
+    g.drawString(f"${dance.ms_to_count(dance.song.getMicrosecondPosition/1000)}%.2fc", 3, size.height - 30)
+    g.drawString(s"${dance.song.getMicrosecondPosition/1000}ms", 3, size.height - 17)
   }
 
   private val progress = new ProgressBar {
@@ -95,12 +98,12 @@ class Visualizer(val dance: Dance) extends BorderPanel {
         dance.song.start()
         timer.start()
       }
-    case KeyPressed(source, key, modifiers, location) if key == Key.Left =>
-      val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000).toInt
-      dance.song.setMicrosecondPosition(dance.count_to_ms(count - 1)*1000)
-    case KeyPressed(source, key, modifiers, location) if key == Key.Right =>
-      val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000).toInt
-      dance.song.setMicrosecondPosition(dance.count_to_ms(count + 1)*1000)
+//    case KeyPressed(source, key, modifiers, location) if key == Key.Left =>
+//      val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000).toInt
+//      dance.song.setMicrosecondPosition(dance.count_to_ms(count - 1)*1000)
+//    case KeyPressed(source, key, modifiers, location) if key == Key.Right =>
+//      val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000).toInt
+//      dance.song.setMicrosecondPosition(dance.count_to_ms(count + 1)*1000)
   }
   listenTo(keys)
 

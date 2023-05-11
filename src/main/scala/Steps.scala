@@ -1,5 +1,5 @@
 import scala.math._
-import Implicits._
+import Extensions._
 
 import scala.util.matching.Regex
 
@@ -8,8 +8,8 @@ object Steps {
 
   val emptyStep: Step = (_, _) => None
 
-  val steps = Map[Regex, Map[String, String] => Step](
-    raw"(1st|2nd) couple cast (up|down) (\d+)".r("couple", "direction", "places") -> ((meta: Map[String, String]) => (dancer: Dancer, t: Double) => {
+  val steps = Map[Regex, (String => String) => Step](
+    raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
       if (dancer.couple%2 == 0 == (meta("couple") == "1st")) Some((
           (
             (-cos(t * Pi) / 2 + 0.5) * meta("places").toInt * (if (meta("direction") == "up") -1 else 1),
@@ -20,7 +20,7 @@ object Steps {
       else None
     }),
 
-    raw"(1st|2nd) couple lead (up|down) (\d+)".r("couple", "direction", "places") -> ((meta: Map[String, String]) => (dancer: Dancer, t: Double) => {
+    raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
       if (dancer.couple%2 == 0 == (meta("couple") == "1st")) Some((
           (
             (-cos(t*Pi)/2 + 0.5)*meta("places").toInt*(if (meta("direction") == "up") -1 else 1),
@@ -31,7 +31,7 @@ object Steps {
       else None
     }),
 
-    raw"(1st|2nd) corners cross right shoulders".r("corners") -> ((meta: Map[String, String]) => (dancer: Dancer, t: Double) => {
+    raw"(?<corners>1st|2nd) corners cross right shoulders".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
       ((dancer.couple%2, dancer.woman, meta("corners")) match {
         case (1, true, "1st") => Some((1.0, 1.0))
         case (0, false, "1st") => Some((-1.0, -1.0))
@@ -44,7 +44,7 @@ object Steps {
       ))
     }),
 
-    raw"Circle (left|right) halfway".r("direction") -> ((meta: Map[String, String]) => (dancer: Dancer, t: Double) => {
+    raw"Circle (?<direction>left|right) halfway".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
       Some(((dancer.couple%2, dancer.woman) match {
         case (1, false) => (sin(t*Pi/2), -cos(t*Pi/2) + 1)
         case (0, false) => (cos(t*Pi/2) - 1, sin(t*Pi/2))
