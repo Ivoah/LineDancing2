@@ -49,7 +49,7 @@ case class Dancer(var couple: Int, woman: Boolean, name: String) {
 
     if (!sitting) {
       g.setPaint(Color.WHITE)
-      g.drawString((couple % 2 + 1).toString, -4, 5)
+      g.drawString((couple%2 + 1).toString, -4, 5)
     }
 
     g.setTransform(transform)

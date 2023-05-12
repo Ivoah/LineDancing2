@@ -23,6 +23,7 @@ class Visualizer(val dance: Dance) extends BorderPanel {
       Dancer(c, woman = false, men(c))
     ))
   }
+  if (NUM_COUPLES%2 == 1) dancers.filter(_.couple == NUM_COUPLES - 1).foreach(_.sitting = true)
 
   private val timer: Timer = {
     var last_range = 0 until 0
@@ -30,18 +31,27 @@ class Visualizer(val dance: Dance) extends BorderPanel {
       val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000)
       val range = dance.range_at(count).getOrElse(0 until 0)
       val steps = dance.steps.getOrElse(range, Seq())
-      if (range != last_range) {
-        if (range.start < last_range.start) {
-          val sitting = dancers.exists(_.sitting)
-          for (dancer <- dancers) {
-            if (sitting) {
+      if (range != last_range) { // New move
+        if (range.start < last_range.start) { // Start from top of dance
+          if (dancers.exists(_.couple == -1)) { // Head couple sitting out
+            for (dancer <- dancers) {
               if (dancer.sitting) {
                 dancer.couple += 1
                 dancer.sitting = false
-              } else if (dancer.couple%2 == 0) dancer.couple += 2
-            } else {
-              if (dancer.couple%2 != 0) dancer.couple -= 2
-              if (dancer.couple == -1 || dancer.couple == NUM_COUPLES - 2) dancer.sitting = true
+              } else {
+                if (dancer.couple%2 == 0) dancer.couple += 2
+                if (dancer.couple == NUM_COUPLES - 1) dancer.sitting = true
+              }
+            }
+          } else {
+            for (dancer <- dancers) {
+              if (dancer.sitting) {
+                dancer.couple -= 1
+                dancer.sitting = false
+              } else {
+                if (dancer.couple%2 != 0) dancer.couple -= 2
+                if (dancer.couple == -1 || dancer.couple == NUM_COUPLES - 2) dancer.sitting = true
+              }
             }
           }
         }
