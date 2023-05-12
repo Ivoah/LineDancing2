@@ -5,8 +5,8 @@ import Extensions._
 
 case class Dancer(var couple: Int, woman: Boolean, name: String) {
 
-  val WIDTH = 50
-  val HEIGHT = 25
+  private val WIDTH = 50
+  private val HEIGHT = 25
 
   private val name_color = Color.BLACK
   private val body_color = if (woman) new Color(255, 105, 180) else new Color(0, 0, 255)

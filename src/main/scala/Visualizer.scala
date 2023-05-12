@@ -24,7 +24,7 @@ class Visualizer(val dance: Dance) extends BorderPanel {
     ))
   }
 
-  val timer: Timer = {
+  private val timer: Timer = {
     var last_range = 0 until 0
     new Timer(10, _ => {
       val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000)

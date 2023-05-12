@@ -8,7 +8,7 @@ object Steps {
 
   val emptyStep: Step = (_, _) => None
 
-  val steps = Map[Regex, (String => String) => Step](
+  val steps: Map[Regex, (String => String) => Step] = Map[Regex, (String => String) => Step](
     raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
       if (dancer.couple%2 == 0 == (meta("couple") == "1st")) Some((
           (
