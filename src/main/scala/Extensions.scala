@@ -2,7 +2,7 @@ import java.awt.Color
 import scala.swing.Graphics2D
 
 object Extensions {
-  import Numeric.Implicits._
+  import Numeric.Implicits.*
   extension[A: Numeric, B: Numeric](t: (A, B)) {
 
     def +(other: (A, B)): (A, B) = (t._1 + other._1, t._2 + other._2)

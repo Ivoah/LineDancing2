@@ -1,14 +1,22 @@
-import scala.swing._
-import scala.swing.event._
-import scala.util.Random
+import Extensions.*
+
+import javax.sound.sampled.*
 import javax.swing.Timer
+import scala.swing.*
+import scala.swing.event.*
+import scala.util.Random
 
-import Extensions._
-
-class Visualizer(val dance: Dance) extends BorderPanel {
+class Visualizer(val dance: Dance, val NUM_COUPLES: Int = 6) extends BorderPanel {
   peer.getFontMetrics(peer.getFont) // Load font into memory to avoid hang on first drawString call
 
-  private val NUM_COUPLES = 6
+  private val inputStream = AudioSystem.getAudioInputStream(dance.song.toFile)
+  val song: Clip = AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip]
+  song.open(inputStream)
+
+  // val volume = song.getControl(FloatControl.Type.MASTER_GAIN).asInstanceOf[FloatControl]
+  // volume.setValue(volume.getMinimum)
+
+//  private val NUM_COUPLES = 6
   private val SCALE: (Double, Double) = (100, 150)
   private def ROOT: (Double, Double) = (
     (size.width - (NUM_COUPLES - 1)*SCALE._1)/2,
@@ -28,7 +36,7 @@ class Visualizer(val dance: Dance) extends BorderPanel {
   private val timer: Timer = {
     var last_range = 0 until 0
     new Timer(10, _ => {
-      val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000)
+      val count = dance.ms_to_count(song.getMicrosecondPosition/1000)
       val range = dance.range_at(count).getOrElse(0 until 0)
       val steps = dance.steps.getOrElse(range, Seq())
       if (range != last_range) { // New move
@@ -64,7 +72,7 @@ class Visualizer(val dance: Dance) extends BorderPanel {
         last_range = range
       }
       repaint()
-      progress.value = (dance.song.getMicrosecondPosition/1000).toInt
+      progress.value = (song.getMicrosecondPosition/1000).toInt
     })
   }
 
@@ -72,7 +80,7 @@ class Visualizer(val dance: Dance) extends BorderPanel {
     super.paintComponent(g)
     implicit val implicitGraphics: Graphics2D = g
 
-    val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000)
+    val count = dance.ms_to_count(song.getMicrosecondPosition/1000)
     val range = dance.range_at(count).getOrElse(0 until 0)
     val progress = (count%dance.length - range.start)/range.length
 
@@ -85,35 +93,40 @@ class Visualizer(val dance: Dance) extends BorderPanel {
       g.drawString(f"${step._1} (${range.length} count${if (range.length == 1) "" else "s"}): ${progress*100}%.2f%%", 3, 20*(i + 1))
     })
 
-    g.drawString(f"${dance.ms_to_count(dance.song.getMicrosecondPosition/1000)}%.2fc", 3, size.height - 30)
-    g.drawString(s"${dance.song.getMicrosecondPosition/1000}ms", 3, size.height - 17)
+    g.drawString(f"${dance.ms_to_count(song.getMicrosecondPosition/1000)}%.2fc", 3, size.height - 30)
+    g.drawString(s"${song.getMicrosecondPosition/1000}ms", 3, size.height - 17)
   }
 
   private val progress = new ProgressBar {
     min = 0
-    max = (dance.song.getMicrosecondLength/1000).toInt
+    max = (song.getMicrosecondLength/1000).toInt
   }
 
   def play(): Unit = {
-    dance.song.start()
+    song.start()
     timer.start()
+  }
+
+  def pause(): Unit = {
+    song.stop()
+    timer.stop()
+  }
+
+  def close(): Unit = {
+    song.close()
+    timer.stop()
   }
 
   keys.reactions += {
     case KeyPressed(source, key, modifiers, location) if key == Key.Space =>
-      if (dance.song.isRunning) {
-        dance.song.stop()
-        timer.stop()
-      } else {
-        dance.song.start()
-        timer.start()
-      }
+      if (song.isRunning) pause()
+      else play()
 //    case KeyPressed(source, key, modifiers, location) if key == Key.Left =>
-//      val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000).toInt
-//      dance.song.setMicrosecondPosition(dance.count_to_ms(count - 1)*1000)
+//      val count = dance.ms_to_count(song.getMicrosecondPosition/1000).toInt
+//      song.setMicrosecondPosition(dance.count_to_ms(count - 1)*1000)
 //    case KeyPressed(source, key, modifiers, location) if key == Key.Right =>
-//      val count = dance.ms_to_count(dance.song.getMicrosecondPosition/1000).toInt
-//      dance.song.setMicrosecondPosition(dance.count_to_ms(count + 1)*1000)
+//      val count = dance.ms_to_count(song.getMicrosecondPosition/1000).toInt
+//      song.setMicrosecondPosition(dance.count_to_ms(count + 1)*1000)
   }
   listenTo(keys)
 

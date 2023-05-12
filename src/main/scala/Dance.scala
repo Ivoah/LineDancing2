@@ -1,12 +1,11 @@
-import java.io.{InputStream, BufferedInputStream}
-import javax.sound.sampled._
-import scala.io.Source
-import org.virtuslab.yaml.{YamlCodec, StringOps}
+import org.virtuslab.yaml.{StringOps, YamlCodec}
+
+import java.nio.file.{Files, Path}
 
 object Dance {
-  def fromYaml(file: InputStream): Dance = {
+  def fromYaml(file: Path): Dance = {
     case class DanceYaml(song: String, marks: Seq[Int], steps: Seq[String]) derives YamlCodec
-    val source = Source.fromInputStream(file).getLines().mkString("\n")
+    val source = Files.readString(file)
     val yaml = source.as[DanceYaml].toOption.get
 
     var last = 0
@@ -23,18 +22,11 @@ object Dance {
         Some(pair)
     }.toMap
 
-    val inputStream = AudioSystem.getAudioInputStream(new BufferedInputStream(getClass.getResourceAsStream(yaml.song)))
-    val clip: Clip = AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip]
-    clip.open(inputStream)
-
-    // val volume = clip.getControl(FloatControl.Type.MASTER_GAIN).asInstanceOf[FloatControl]
-    // volume.setValue(volume.getMinimum)
-
-    Dance(steps, clip, yaml.marks, last)
+    Dance(steps, file.getParent.resolve(yaml.song), yaml.marks, last)
   }
 }
 
-case class Dance(steps: Map[Range, Seq[(String, Steps.Step)]], song: Clip, marks: Seq[Int], length: Int) {
+case class Dance(steps: Map[Range, Seq[(String, Steps.Step)]], song: Path, marks: Seq[Int], length: Int) {
   private val mark_fns = marks.sliding(2).zipWithIndex.map {
     case (Seq(a, b), i) => (b, (ms: Double) => math.max((ms - a)*length/(b - a) + length*i, 0))
   }.toSeq

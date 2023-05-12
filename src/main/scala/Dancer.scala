@@ -1,7 +1,7 @@
+import Extensions.*
+
 import java.awt.Color
 import scala.swing.Graphics2D
-
-import Extensions._
 
 case class Dancer(var couple: Int, woman: Boolean, name: String) {
 

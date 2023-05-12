@@ -1,6 +1,6 @@
-import scala.math._
-import Extensions._
+import Extensions.*
 
+import scala.math.*
 import scala.util.matching.Regex
 
 object Steps {
