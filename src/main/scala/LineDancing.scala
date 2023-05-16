@@ -25,7 +25,7 @@ object LineDancing extends MainFrame with App {
       new Menu("Options") {
         contents ++= Seq(
           new MenuItem(Action("Number of couples") {
-            Dialog.showInput(mainFrame, "Number of couples", initial = visualizer.NUM_COUPLES.toString).foreach { str =>
+            Dialog.showInput(mainFrame, "Number of couples", initial = visualizer.num_couples.toString).foreach { str =>
               str.toIntOption match {
                 case Some(dancers) if dancers > 1 =>
                   visualizer.close()

@@ -6,7 +6,7 @@ import scala.swing.*
 import scala.swing.event.*
 import scala.util.Random
 
-class Visualizer(val dance: Dance, val NUM_COUPLES: Int = 6) extends BorderPanel {
+class Visualizer(val dance: Dance, val num_couples: Int = 6) extends BorderPanel {
   peer.getFontMetrics(peer.getFont) // Load font into memory to avoid hang on first drawString call
 
   private val inputStream = AudioSystem.getAudioInputStream(dance.song.toFile)
@@ -16,65 +16,26 @@ class Visualizer(val dance: Dance, val NUM_COUPLES: Int = 6) extends BorderPanel
   // val volume = song.getControl(FloatControl.Type.MASTER_GAIN).asInstanceOf[FloatControl]
   // volume.setValue(volume.getMinimum)
 
-//  private val NUM_COUPLES = 6
   private val SCALE: (Double, Double) = (100, 150)
   private def ROOT: (Double, Double) = (
-    (size.width - (NUM_COUPLES - 1)*SCALE._1)/2,
+    (size.width - (num_couples - 1)*SCALE._1)/2,
     (size.height - (2 - 1)*SCALE._2)/2
   )
 
   private val dancers = {
     val women = Random.shuffle(Seq("Allison", "Cat", "Dana", "Emma", "Evelyn", "Geneva", "Hannah", "Heather", "Isa", "Janna", "Katie", "Lilly", "Lydia", "Maerin", "Sara", "Sarah", "Shai"))
     val men = Random.shuffle(Seq("Aaron", "Ben", "Charles", "Haddon", "Jacob G.", "Jacob H.", "John D.", "John K.", "Josh", "Micah", "Noobscout", "Tim D.", "Tim M."))
-    (0 until NUM_COUPLES).flatMap(c => Seq(
-      Dancer(c, woman = true, women(c)),
-      Dancer(c, woman = false, men(c))
+    (0 until num_couples).flatMap(c => Seq(
+      Dancer(dance, c, num_couples, woman = true, women(c)),
+      Dancer(dance, c, num_couples, woman = false, men(c))
     ))
   }
-  if (NUM_COUPLES%2 == 1) dancers.filter(_.couple == NUM_COUPLES - 1).foreach(_.sitting = true)
+//  if (num_couples%2 == 1) dancers.filter(_.couple == num_couples - 1).foreach(_.sitting = true)
 
-  private val timer: Timer = {
-    var last_range = 0 until 0
-    new Timer(10, _ => {
-      val count = dance.ms_to_count(song.getMicrosecondPosition/1000)
-      val range = dance.range_at(count).getOrElse(0 until 0)
-      val steps = dance.steps.getOrElse(range, Seq())
-      if (range != last_range) { // New move
-        if (range.start < last_range.start) { // Start from top of dance
-          if (dancers.exists(_.couple == -1)) { // Head couple sitting out
-            for (dancer <- dancers) {
-              if (dancer.sitting) {
-                dancer.couple += 1
-                dancer.sitting = false
-              } else {
-                if (dancer.couple%2 == 0) dancer.couple += 2
-                if (dancer.couple == NUM_COUPLES - 1) dancer.sitting = true
-              }
-            }
-          } else {
-            for (dancer <- dancers) {
-              if (dancer.sitting) {
-                dancer.couple -= 1
-                dancer.sitting = false
-              } else {
-                if (dancer.couple%2 != 0) dancer.couple -= 2
-                if (dancer.couple == -1 || dancer.couple == NUM_COUPLES - 2) dancer.sitting = true
-              }
-            }
-          }
-        }
-        for (dancer <- dancers) {
-          dancer.change_step(
-            if (dancer.sitting) Steps.emptyStep
-            else steps.find(_._2(dancer, 0).nonEmpty).map(_._2).getOrElse(Steps.emptyStep)
-          )
-        }
-        last_range = range
-      }
-      repaint()
-      progress.value = (song.getMicrosecondPosition/1000).toInt
-    })
-  }
+  private val timer: Timer = new Timer(10, _ => {
+    repaint()
+    progress.value = (song.getMicrosecondPosition/1000).toInt
+  })
 
   override def paintComponent(g: Graphics2D): Unit = {
     super.paintComponent(g)
@@ -86,7 +47,7 @@ class Visualizer(val dance: Dance, val NUM_COUPLES: Int = 6) extends BorderPanel
 
     val transform = g.getTransform
     g.translate(ROOT)
-    dancers.foreach(_.draw(SCALE, progress))
+    dancers.foreach(_.draw(count, SCALE))
     g.setTransform(transform)
 
     dance.steps.get(range).foreach(_.zipWithIndex.foreach { case (step, i) =>
@@ -100,6 +61,16 @@ class Visualizer(val dance: Dance, val NUM_COUPLES: Int = 6) extends BorderPanel
   private val progress = new ProgressBar {
     min = 0
     max = (song.getMicrosecondLength/1000).toInt
+    mouse.clicks.reactions += {
+      case MousePressed(source, point, modifiers, clicks, triggersPopup) =>
+        setMicrosecondPosition((point.x.toDouble/source.size.width*song.getMicrosecondLength).toLong)
+    }
+    mouse.moves.reactions += {
+      case MouseDragged(source, point, modifiers) =>
+        setMicrosecondPosition((point.x.toDouble/source.size.width*song.getMicrosecondLength).toLong)
+    }
+    listenTo(mouse.clicks)
+    listenTo(mouse.moves)
   }
 
   def play(): Unit = {
@@ -117,16 +88,19 @@ class Visualizer(val dance: Dance, val NUM_COUPLES: Int = 6) extends BorderPanel
     timer.stop()
   }
 
+  def setMicrosecondPosition(µs: Long): Unit = {
+    song.setMicrosecondPosition(µs)
+    timer.getActionListeners.foreach(_.actionPerformed(null))
+  }
+
   keys.reactions += {
     case KeyPressed(source, key, modifiers, location) if key == Key.Space =>
       if (song.isRunning) pause()
       else play()
-//    case KeyPressed(source, key, modifiers, location) if key == Key.Left =>
-//      val count = dance.ms_to_count(song.getMicrosecondPosition/1000).toInt
-//      song.setMicrosecondPosition(dance.count_to_ms(count - 1)*1000)
-//    case KeyPressed(source, key, modifiers, location) if key == Key.Right =>
-//      val count = dance.ms_to_count(song.getMicrosecondPosition/1000).toInt
-//      song.setMicrosecondPosition(dance.count_to_ms(count + 1)*1000)
+    case KeyPressed(source, key, modifiers, location) if key == Key.Left =>
+      setMicrosecondPosition(song.getMicrosecondPosition - 1000000)
+    case KeyPressed(source, key, modifiers, location) if key == Key.Right =>
+      setMicrosecondPosition(song.getMicrosecondPosition + 1000000)
   }
   listenTo(keys)
 

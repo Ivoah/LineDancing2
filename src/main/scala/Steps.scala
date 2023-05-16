@@ -4,13 +4,11 @@ import scala.math.*
 import scala.util.matching.Regex
 
 object Steps {
-  type Step = (Dancer, Double) => Option[((Double, Double), Double)]
-
-  val emptyStep: Step = (_, _) => None
+  type Step = (Dancer, Double, Double) => Option[((Double, Double), Double)]
 
   val steps: Map[Regex, (String => String) => Step] = Map[Regex, (String => String) => Step](
-    raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
-      if (dancer.couple%2 == 0 == (meta("couple") == "1st")) Some((
+    raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+      if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
           (
             (-cos(t * Pi) / 2 + 0.5) * meta("places").toInt * (if (meta("direction") == "up") -1 else 1),
             sin(t * Pi) / 3 * (if (dancer.woman) -1 else 1)
@@ -20,8 +18,8 @@ object Steps {
       else None
     }),
 
-    raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
-      if (dancer.couple%2 == 0 == (meta("couple") == "1st")) Some((
+    raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+      if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
           (
             (-cos(t*Pi)/2 + 0.5)*meta("places").toInt*(if (meta("direction") == "up") -1 else 1),
             -sin(t*Pi)/3*(if (dancer.woman) -1 else 1)
@@ -31,8 +29,8 @@ object Steps {
       else None
     }),
 
-    raw"(?<corners>1st|2nd) corners cross right shoulders".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
-      ((dancer.couple%2, dancer.woman, meta("corners")) match {
+    raw"(?<corners>1st|2nd) corners cross right shoulders".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+      ((dancer.couple(count)%2, dancer.woman, meta("corners")) match {
         case (1, true, "1st") => Some((1.0, 1.0))
         case (0, false, "1st") => Some((-1.0, -1.0))
         case (0, true, "2nd") => Some((-1.0, 1.0))
@@ -44,8 +42,8 @@ object Steps {
       ))
     }),
 
-    raw"Circle (?<direction>left|right) halfway".r -> ((meta: String => String) => (dancer: Dancer, t: Double) => {
-      Some(((dancer.couple%2, dancer.woman) match {
+    raw"Circle (?<direction>left|right) halfway".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+      Some(((dancer.couple(count)%2, dancer.woman) match {
         case (1, false) => (sin(t*Pi/2), -cos(t*Pi/2) + 1)
         case (0, false) => (cos(t*Pi/2) - 1, sin(t*Pi/2))
         case (0, true) => (-sin(t*Pi/2), cos(t*Pi/2) - 1)
