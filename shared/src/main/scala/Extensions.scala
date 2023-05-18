@@ -1,5 +1,3 @@
-import java.awt.Color
-import scala.swing.Graphics2D
 
 object Extensions {
   import Numeric.Implicits.*
@@ -10,17 +8,5 @@ object Extensions {
   
   extension[A: Numeric, B: Numeric, C: Numeric](tt: ((A, B), C)) {
     def +(other: ((A, B), C)): ((A, B), C) = (tt._1 + other._1, tt._2 + other._2)
-  }
-
-  extension (g: Graphics2D) {
-    def translate(t: (Double, Double)): Unit = {
-      g.translate(t._1, t._2)
-    }
-  }
-
-  extension (c: Color) {
-    def withAlpha(a: Int): Color = {
-      new Color(c.getRed, c.getGreen, c.getBlue, a)
-    }
   }
 }

@@ -2,4 +2,7 @@ project/
 target/
 .bsp/
 .idea/
-
+.DS_Store
+.bloop/
+.metals/
+.vscode/

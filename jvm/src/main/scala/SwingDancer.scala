@@ -1,9 +1,10 @@
 import Extensions.*
+import SwingExtensions.*
 
 import java.awt.Color
 import scala.swing.Graphics2D
 
-case class Dancer(dance: Dance, starting_couple: Int, num_couples: Int, woman: Boolean, name: String) {
+case class SwingDancer(override val dance: Dance, override val starting_couple: Int, override val num_couples: Int, override val woman: Boolean, name: String) extends Dancer(dance, starting_couple, num_couples, woman) {
   private val WIDTH = 50
   private val HEIGHT = 25
 
@@ -14,42 +15,6 @@ case class Dancer(dance: Dance, starting_couple: Int, num_couples: Int, woman: B
   private val name_color_sitting = Color.BLACK.withAlpha(64)
   private val body_color_sitting = body_color.withAlpha(64)
   private val head_color_sitting = head_color.withAlpha(64)
-
-  private def starting_pos(count: Double): ((Double, Double), Double) = {
-    val loop = count.toInt/dance.length
-    (
-      (
-        couple(count) + (if (loop%2 != 0) 1 else 0),
-        if (woman) 0 else 1
-      ),
-      if (woman) 0 else math.Pi
-    )
-  }
-
-  def couple(count: Double): Int = {
-    val loop = count.toInt/dance.length
-    val offset = if (starting_couple%2 == 0) {
-      starting_couple
-    } else {
-      num_couples*2 - starting_couple - 1
-    }
-
-    lazy val f: PartialFunction[Int, Int] = {
-      case n if n < num_couples => n
-      case n => (num_couples - 1) - f(n - num_couples)
-    }
-    f(loop + offset) - loop%2
-  }
-
-  def sitting(count: Double): Boolean = {
-    val loop = count.toInt/dance.length
-    couple(count) match {
-      case c if c < 0 => true
-      case c if num_couples%2 == 0 && loop%2 != 0 && c == num_couples - 2 => true
-      case c if num_couples%2 != 0 && loop%2 == 0 && c == num_couples - 1 => true
-      case _ => false
-    }
-  }
 
   def draw(count: Double, scale: (Double, Double))(implicit g: Graphics2D): Unit = {
     val transform = g.getTransform

@@ -1,4 +1,5 @@
 import Extensions.*
+import SwingExtensions.*
 
 import javax.sound.sampled.*
 import javax.swing.Timer
@@ -26,8 +27,8 @@ class Visualizer(val dance: Dance, val num_couples: Int = 6) extends BorderPanel
     val women = Random.shuffle(Seq("Allison", "Cat", "Dana", "Emma", "Evelyn", "Geneva", "Hannah", "Heather", "Isa", "Janna", "Katie", "Lilly", "Lydia", "Maerin", "Sara", "Sarah", "Shai"))
     val men = Random.shuffle(Seq("Aaron", "Ben", "Charles", "Haddon", "Jacob G.", "Jacob H.", "John D.", "John K.", "Josh", "Micah", "Noobscout", "Tim D.", "Tim M."))
     (0 until num_couples).flatMap(c => Seq(
-      Dancer(dance, c, num_couples, woman = true, women(c)),
-      Dancer(dance, c, num_couples, woman = false, men(c))
+      SwingDancer(dance, c, num_couples, woman = true, women(c)),
+      SwingDancer(dance, c, num_couples, woman = false, men(c))
     ))
   }
 //  if (num_couples%2 == 1) dancers.filter(_.couple == num_couples - 1).foreach(_.sitting = true)
