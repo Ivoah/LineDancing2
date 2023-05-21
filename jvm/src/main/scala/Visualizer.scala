@@ -7,9 +7,12 @@ import scala.swing.*
 import scala.swing.event.*
 import scala.util.Random
 import java.nio.file.{Path, Files}
+import java.awt.Font
+import java.io.File
 
 class Visualizer(val yamlFile: Path, val num_couples: Int = 6) extends BorderPanel {
   peer.getFontMetrics(peer.getFont) // Load font into memory to avoid hang on first drawString call
+  font = Font.createFont(Font.TRUETYPE_FONT, new File("Eczar.ttf")).deriveFont(13.0f)
 
   val dance = Dance.fromYaml(Files.readString(yamlFile))
 

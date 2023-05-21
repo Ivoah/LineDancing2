@@ -15,6 +15,7 @@ def main(): Unit = {
   val num_couples = 6
   val canvas = document.querySelector("canvas").asInstanceOf[Canvas]
   implicit val ctx: CanvasRenderingContext2D = canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D]
+  ctx.font = "13px Eczar"
 
   val SCALE: (Double, Double) = (100, 150)
   val ROOT: (Double, Double) = (
