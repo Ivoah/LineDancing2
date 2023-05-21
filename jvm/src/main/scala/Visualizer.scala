@@ -6,11 +6,14 @@ import javax.swing.Timer
 import scala.swing.*
 import scala.swing.event.*
 import scala.util.Random
+import java.nio.file.{Path, Files}
 
-class Visualizer(val dance: Dance, val num_couples: Int = 6) extends BorderPanel {
+class Visualizer(val yamlFile: Path, val num_couples: Int = 6) extends BorderPanel {
   peer.getFontMetrics(peer.getFont) // Load font into memory to avoid hang on first drawString call
 
-  private val inputStream = AudioSystem.getAudioInputStream(dance.song.toFile)
+  val dance = Dance.fromYaml(Files.readString(yamlFile))
+
+  private val inputStream = AudioSystem.getAudioInputStream(yamlFile.getParent.resolve(dance.song).toFile)
   val song: Clip = AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip]
   song.open(inputStream)
 

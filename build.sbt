@@ -11,5 +11,6 @@ lazy val LineDancing2 = crossProject(JSPlatform, JVMPlatform).crossType(CrossTyp
     libraryDependencies += "org.scala-lang.modules" %% "scala-swing" % "3.0.0",
   )
   .jsSettings(
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.5.0",
     scalaJSUseMainModuleInitializer := true
   )

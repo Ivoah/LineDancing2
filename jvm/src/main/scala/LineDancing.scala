@@ -4,7 +4,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 import scala.swing.*
 
 object LineDancing extends MainFrame with App {
-  private var visualizer = new Visualizer(Dance.fromYaml(Path.of("dances/Hole in the Wall.yaml")))
+  private var visualizer = new Visualizer(Path.of("dances/Hole in the Wall.yaml"))
   private val mainFrame = this
 
   menuBar = new MenuBar {
@@ -16,7 +16,7 @@ object LineDancing extends MainFrame with App {
             chooser.fileFilter = new FileNameExtensionFilter("YAML files", "yml", "yaml")
             if (chooser.showOpenDialog(this) == FileChooser.Result.Approve) {
               visualizer.close()
-              visualizer = new Visualizer(Dance.fromYaml(chooser.selectedFile.toPath))
+              visualizer = new Visualizer(chooser.selectedFile.toPath)
               mainFrame.contents = visualizer
             }
           })
@@ -29,7 +29,7 @@ object LineDancing extends MainFrame with App {
               str.toIntOption match {
                 case Some(dancers) if dancers > 1 =>
                   visualizer.close()
-                  visualizer = new Visualizer(visualizer.dance, dancers)
+                  visualizer = new Visualizer(visualizer.yamlFile, dancers)
                   mainFrame.contents = visualizer
                 case _ => Dialog.showMessage(mainFrame, s""""$str" is not a valid option""", "Error", Dialog.Message.Error)
               }

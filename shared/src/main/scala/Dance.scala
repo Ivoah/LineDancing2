@@ -3,13 +3,12 @@ import org.virtuslab.yaml.{StringOps, YamlCodec}
 import java.nio.file.{Files, Path}
 
 object Dance {
-  def fromYaml(file: Path): Dance = {
+  def fromYaml(yaml: String): Dance = {
     case class DanceYaml(song: String, marks: Seq[Int], steps: Seq[String]) derives YamlCodec
-    val source = Files.readString(file)
-    val yaml = source.as[DanceYaml].toOption.get
+    val dance = yaml.as[DanceYaml].toOption.get
 
     var last = 0
-    val steps = yaml.steps.flatMap {
+    val steps = dance.steps.flatMap {
       case s"${steps_s} (${counts_s} counts)" =>
         val counts = counts_s.toInt
         val steps = steps_s.split(" while ").map { step =>
@@ -22,11 +21,11 @@ object Dance {
         Some(pair)
     }.toMap
 
-    Dance(steps, file.getParent.resolve(yaml.song), yaml.marks, last)
+    Dance(steps, dance.song, dance.marks, last)
   }
 }
 
-case class Dance(steps: Map[Range, Seq[(String, Steps.Step)]], song: Path, marks: Seq[Int], length: Int) {
+case class Dance(steps: Map[Range, Seq[(String, Steps.Step)]], song: String, marks: Seq[Int], length: Int) {
   private val mark_fns = marks.sliding(2).zipWithIndex.map {
     case (Seq(a, b), i) => (b, (ms: Double) => math.max((ms - a)*length/(b - a) + length*i, 0))
   }.toSeq
