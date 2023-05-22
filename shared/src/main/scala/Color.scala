@@ -1,4 +1,3 @@
-
 case class Color(r: Int, g: Int, b: Int, a: Int = 255) {
     private val BRIGHT_SCALE = 0.7
     override def toString(): String = s"rgba($r, $g, $b, ${a.toDouble/255})"

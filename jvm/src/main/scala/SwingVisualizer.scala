@@ -1,5 +1,4 @@
 import Extensions.*
-import SwingExtensions.*
 
 import javax.sound.sampled.*
 import javax.swing.Timer
@@ -10,34 +9,16 @@ import java.nio.file.{Path, Files}
 import java.awt.Font
 import java.io.File
 
-class Visualizer(val yamlFile: Path, val num_couples: Int = 6) extends BorderPanel {
+class SwingVisualizer(val yamlFile: Path, val num_couples: Int = 6) extends BorderPanel {
   peer.getFontMetrics(peer.getFont) // Load font into memory to avoid hang on first drawString call
   font = Font.createFont(Font.TRUETYPE_FONT, new File("Eczar.ttf")).deriveFont(13.0f)
 
   val dance = Dance.fromYaml(Files.readString(yamlFile))
+  val visualizer = Visualizer(dance, num_couples)
 
   private val inputStream = AudioSystem.getAudioInputStream(yamlFile.getParent.resolve(dance.song).toFile)
   val song: Clip = AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip]
   song.open(inputStream)
-
-  // val volume = song.getControl(FloatControl.Type.MASTER_GAIN).asInstanceOf[FloatControl]
-  // volume.setValue(volume.getMinimum)
-
-  private val SCALE: (Double, Double) = (100, 150)
-  private def ROOT: (Double, Double) = (
-    (size.width - (num_couples - 1)*SCALE._1)/2,
-    (size.height - (2 - 1)*SCALE._2)/2
-  )
-
-  private val dancers = {
-    val women = Random.shuffle(Seq("Allison", "Cat", "Dana", "Emma", "Evelyn", "Geneva", "Hannah", "Heather", "Isa", "Janna", "Katie", "Lilly", "Lydia", "Maerin", "Sara", "Sarah", "Shai"))
-    val men = Random.shuffle(Seq("Aaron", "Ben", "Charles", "Haddon", "Jacob G.", "Jacob H.", "John D.", "John K.", "Josh", "Micah", "Noobscout", "Tim D.", "Tim M."))
-    (0 until num_couples).flatMap(c => Seq(
-      SwingDancer(dance, c, num_couples, woman = true, women(c)),
-      SwingDancer(dance, c, num_couples, woman = false, men(c))
-    ))
-  }
-//  if (num_couples%2 == 1) dancers.filter(_.couple == num_couples - 1).foreach(_.sitting = true)
 
   private val timer: Timer = new Timer(10, _ => {
     repaint()
@@ -46,23 +27,8 @@ class Visualizer(val yamlFile: Path, val num_couples: Int = 6) extends BorderPan
 
   override def paintComponent(g: Graphics2D): Unit = {
     super.paintComponent(g)
-    implicit val implicitGraphics: Graphics2D = g
-
-    val count = dance.ms_to_count(song.getMicrosecondPosition/1000)
-    val range = dance.range_at(count).getOrElse(0 until 0)
-    val progress = (count%dance.length - range.start)/range.length
-
-    val transform = g.getTransform
-    g.translate(ROOT)
-    dancers.foreach(_.draw(count, SCALE))
-    g.setTransform(transform)
-
-    dance.steps.get(range).foreach(_.zipWithIndex.foreach { case (step, i) =>
-      g.drawString(f"${step._1} (${range.length} count${if (range.length == 1) "" else "s"}): ${progress*100}%.2f%%", 3, 20*(i + 1))
-    })
-
-    g.drawString(f"${dance.ms_to_count(song.getMicrosecondPosition/1000)}%.2fc", 3, size.height - 30)
-    g.drawString(s"${song.getMicrosecondPosition/1000}ms", 3, size.height - 17)
+    implicit val ctx = SwingDrawingContext(g)
+    visualizer.draw(song.getMicrosecondPosition/1000)
   }
 
   private val progress = new ProgressBar {

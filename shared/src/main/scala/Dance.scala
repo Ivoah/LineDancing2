@@ -1,7 +1,5 @@
 import org.virtuslab.yaml.{StringOps, YamlCodec}
 
-import java.nio.file.{Files, Path}
-
 object Dance {
   def fromYaml(yaml: String): Dance = {
     case class DanceYaml(song: String, marks: Seq[Int], steps: Seq[String]) derives YamlCodec

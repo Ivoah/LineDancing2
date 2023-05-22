@@ -5,7 +5,7 @@ import scala.swing.*
 
 object LineDancing extends SimpleSwingApplication {
   def top = new MainFrame {
-    private var visualizer = new Visualizer(Path.of("dances/Hole in the Wall.yaml"))
+    private var visualizer = new SwingVisualizer(Path.of("dances/Hole in the Wall.yaml"))
     private val mainFrame = this
 
     menuBar = new MenuBar {
@@ -17,7 +17,7 @@ object LineDancing extends SimpleSwingApplication {
               chooser.fileFilter = new FileNameExtensionFilter("YAML files", "yml", "yaml")
               if (chooser.showOpenDialog(this) == FileChooser.Result.Approve) {
                 visualizer.close()
-                visualizer = new Visualizer(chooser.selectedFile.toPath)
+                visualizer = new SwingVisualizer(chooser.selectedFile.toPath)
                 mainFrame.contents = visualizer
               }
             })
@@ -30,7 +30,7 @@ object LineDancing extends SimpleSwingApplication {
                 str.toIntOption match {
                   case Some(dancers) if dancers > 1 =>
                     visualizer.close()
-                    visualizer = new Visualizer(visualizer.yamlFile, dancers)
+                    visualizer = new SwingVisualizer(visualizer.yamlFile, dancers)
                     mainFrame.contents = visualizer
                   case _ => Dialog.showMessage(mainFrame, s""""$str" is not a valid option""", "Error", Dialog.Message.Error)
                 }
