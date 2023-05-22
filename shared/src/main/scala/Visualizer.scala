@@ -35,7 +35,7 @@ case class Visualizer(dance: Dance, num_couples: Int = 6) {
       ctx.drawString(step, 3, 20*(i + 1))
     }
 
-    ctx.drawString(f"${dance.ms_to_count(ms)}%.2fc", 3, ctx.height - 30)
-    ctx.drawString(s"${ms.toInt}ms", 3, ctx.height - 17)
+    ctx.drawString(f"${dance.ms_to_count(ms)}%.2fc", 3, ctx.height - 15)
+    ctx.drawString(s"${ms.toInt}ms", 3, ctx.height)
   }
 }
