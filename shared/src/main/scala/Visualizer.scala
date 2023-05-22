@@ -10,8 +10,8 @@ case class Visualizer(dance: Dance, num_couples: Int = 6) {
   )
 
   private val dancers = {
-    val women = Random.shuffle(Seq("Allison", "Cat", "Dana", "Emma", "Evelyn", "Geneva", "Hannah", "Heather", "Isa", "Janna", "Katie", "Lilly", "Lydia", "Maerin", "Sara", "Sarah", "Shai"))
-    val men = Random.shuffle(Seq("Aaron", "Ben", "Charles", "Haddon", "Jacob G.", "Jacob H.", "John D.", "John K.", "Josh", "Micah", "Noobscout", "Tim D.", "Tim M."))
+    val women = Random.shuffle(Names.women)
+    val men = Random.shuffle(Names.men)
     (0 until num_couples).flatMap(c => Seq(
       Dancer(dance, c, num_couples, woman = true, women(c)),
       Dancer(dance, c, num_couples, woman = false, men(c))
