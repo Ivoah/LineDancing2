@@ -23,15 +23,17 @@ case class Visualizer(dance: Dance, num_couples: Int = 6) {
     val range = dance.range_at(count).getOrElse(0 until 0)
     val progress = (count%dance.length - range.start)/range.length
 
-    ctx.clear()
-
     ctx.withTranslation(ROOT) {
       dancers.foreach(_.draw(count, SCALE))
     }
 
-    dance.steps.get(range).foreach(_.zipWithIndex.foreach { case (step, i) =>
-      ctx.drawString(f"${step._1} (${range.length} count${if (range.length == 1) "" else "s"}): ${progress*100}%.2f%%", 3, 20*(i + 1))
-    })
+    val currentSteps = dance.steps(range).map(s => s"${s._1} (${range.length} count${if (range.length == 1) "" else "s"})")
+    currentSteps.zipWithIndex.foreach { case (step, i) =>
+      ctx.withColor(Color.GREEN) {
+        ctx.drawRectangle(3, 5 + 20*i, (ctx.stringWidth(step)*progress).toInt, 20)
+      }
+      ctx.drawString(step, 3, 20*(i + 1))
+    }
 
     ctx.drawString(f"${dance.ms_to_count(ms)}%.2fc", 3, ctx.height - 30)
     ctx.drawString(s"${ms.toInt}ms", 3, ctx.height - 17)

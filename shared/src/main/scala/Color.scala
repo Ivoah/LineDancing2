@@ -8,4 +8,5 @@ case class Color(r: Int, g: Int, b: Int, a: Int = 255) {
 object Color {
     val BLACK = Color(0, 0, 0)
     val WHITE = Color(255, 255, 255)
+    val GREEN = Color(0, 255, 0)
 }

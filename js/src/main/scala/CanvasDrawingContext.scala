@@ -33,4 +33,7 @@ case class CanvasDrawingContext(ctx: CanvasRenderingContext2D) extends AbstractD
     ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, 2 * math.Pi);
     ctx.fill();
   }
+  def drawRectangle(x: Int, y: Int, w: Int, h: Int): Unit = ctx.fillRect(x, y, w, h)
+
+  def stringWidth(str: String): Int = ctx.measureText(str).width.toInt
 }
