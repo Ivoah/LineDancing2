@@ -1,7 +1,7 @@
 import Extensions.*
 
 import org.scalajs.dom.*
-import org.scalajs.dom.html.Canvas
+import org.scalajs.dom.html.{Canvas, Div}
 
 import scala.scalajs.js.timers.*
 import scala.scalajs.js.Date
@@ -11,7 +11,7 @@ def main(): Unit = {
   val num_couples = 6
   val canvas = document.querySelector("canvas").asInstanceOf[Canvas]
   implicit val ctx = CanvasDrawingContext(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
-  val container = document.getElementById("container")
+  val svgContainer = document.getElementById("container").asInstanceOf[Div]
 
   val dance = Dance.fromYaml("""song: Hole in the Wall.wav
 marks: [1600, 33400, 66000, 98640, 131360, 162800, 194600, 226000]
@@ -40,7 +40,7 @@ steps:
     visualizer.draw(audioElement.currentTime*1000)(svgCtx)
     svgCtx.drawString(f"${1000/((Date.now() - lastDraw))}%2.2f", svgCtx.width - 50, 20)
 
-    container.innerHTML = svgCtx.render()
+    svgContainer.innerHTML = svgCtx.render()
     lastDraw = Date.now()
   }
 

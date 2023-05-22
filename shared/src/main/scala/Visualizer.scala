@@ -35,6 +35,15 @@ case class Visualizer(dance: Dance, num_couples: Int = 6) {
       ctx.drawString(step, 3, 20*(i + 1))
     }
 
+    ctx.withColor(Color.BLACK.dimmed) {
+      dance.range_at(range.end + 1).foreach { nextRange =>
+        val nextSteps = dance.steps(nextRange).map(s => s"${s._1} (${nextRange.length} count${if (nextRange.length == 1) "" else "s"})")
+        nextSteps.zipWithIndex.foreach { case (step, i) =>
+          ctx.drawString(step, 3, 20*(i + currentSteps.length + 1))
+        }
+      }
+    }
+
     ctx.drawString(f"${dance.ms_to_count(ms)}%.2fc", 3, ctx.height - 15)
     ctx.drawString(s"${ms.toInt}ms", 3, ctx.height)
   }

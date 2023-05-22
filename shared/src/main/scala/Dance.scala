@@ -36,3 +36,4 @@ case class Dance(steps: Map[Range, Seq[(String, Steps.Step)]], song: String, mar
 
   def range_at(count: Double): Option[Range] = steps.keys.find(range => range.start <= count%length && count%length < range.end)
 }
+

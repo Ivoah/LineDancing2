@@ -3,6 +3,7 @@ case class Color(r: Int, g: Int, b: Int, a: Int = 255) {
     override def toString(): String = s"rgba($r, $g, $b, ${a.toDouble/255})"
     def withAlpha(newAlpha: Int) = Color(r, g, b, newAlpha)
     def darker = Color((r*BRIGHT_SCALE).toInt, (g*BRIGHT_SCALE).toInt, (b*BRIGHT_SCALE).toInt, a)
+    def dimmed = withAlpha(64)
 }
 
 object Color {

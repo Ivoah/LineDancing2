@@ -8,9 +8,9 @@ case class Dancer(dance: Dance, starting_couple: Int, num_couples: Int, woman: B
   private val body_color = if (woman) new Color(255, 105, 180) else new Color(0, 0, 255)
   private val head_color = body_color.darker
 
-  private val name_color_sitting = Color.BLACK.withAlpha(64)
-  private val body_color_sitting = body_color.withAlpha(64)
-  private val head_color_sitting = head_color.withAlpha(64)
+  private val name_color_sitting = Color.BLACK.dimmed
+  private val body_color_sitting = body_color.dimmed
+  private val head_color_sitting = head_color.dimmed
 
   protected def starting_pos(count: Double): ((Double, Double), Double) = {
     val loop = count.toInt/dance.length
