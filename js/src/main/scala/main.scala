@@ -11,6 +11,7 @@ def main(): Unit = {
   val num_couples = 6
   val canvas = document.querySelector("canvas").asInstanceOf[Canvas]
   implicit val ctx = CanvasDrawingContext(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
+  val container = document.getElementById("container")
 
   val dance = Dance.fromYaml("""song: Hole in the Wall.wav
 marks: [1600, 33400, 66000, 98640, 131360, 162800, 194600, 226000]
@@ -32,6 +33,12 @@ steps:
   setInterval(10) {
     visualizer.draw(audioElement.currentTime*1000)
     ctx.drawString(f"${1000/((Date.now() - lastDraw))}%2.2f", ctx.width - 50, 20)
+
+    val svgCtx = SvgDrawingContext(640, 480)
+    visualizer.draw(audioElement.currentTime*1000)(svgCtx)
+    svgCtx.drawString(f"${1000/((Date.now() - lastDraw))}%2.2f", svgCtx.width - 50, 20)
+
+    container.innerHTML = svgCtx.render()
     lastDraw = Date.now()
   }
 

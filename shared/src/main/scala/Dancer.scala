@@ -49,30 +49,31 @@ case class Dancer(dance: Dance, starting_couple: Int, num_couples: Int, woman: B
   }
 
   def draw(count: Double, scale: (Double, Double))(implicit ctx: AbstractDrawingContext): Unit = {
-    ctx.save()
-
     val pos = if (!sitting(count)) {
       dance.steps.filter(_._1.start < count%dance.length).flatMap { (range, steps) =>
         steps.map(_._2(this, count, math.min((count%dance.length - range.start)/range.length, 1)))
       }.flatten.foldLeft(starting_pos(count))(_ + _)
     } else starting_pos(count)
 
-    ctx.translate(pos._1 * scale)
-    ctx.rotate(pos._2)
-
-    ctx.setColor(if (sitting(count)) name_color_sitting else name_color)
-    ctx.drawString(name, -WIDTH/2, -HEIGHT/2)
-
-    ctx.setColor(if (sitting(count)) body_color_sitting else body_color)
-    ctx.drawOval(-WIDTH/2, -HEIGHT*3/10, WIDTH, HEIGHT*3/5)
-    ctx.setColor(if (sitting(count)) head_color_sitting else head_color)
-    ctx.drawOval(-HEIGHT/2, -HEIGHT/2, HEIGHT, HEIGHT)
-
-    if (!sitting(count)) {
-      ctx.setColor(Color.WHITE)
-      ctx.drawString((couple(count)%2 + 1).toString, -4, 5)
+    ctx.withTranslation(pos._1 * scale) {
+      ctx.withRotation(pos._2) {
+        ctx.withColor(if (sitting(count)) name_color_sitting else name_color) {
+          ctx.drawString(name, -WIDTH/2, -HEIGHT/2)
+        }
+    
+        ctx.withColor(if (sitting(count)) body_color_sitting else body_color) {
+          ctx.drawOval(-WIDTH/2, -HEIGHT*3/10, WIDTH, HEIGHT*3/5)
+        }
+        ctx.withColor(if (sitting(count)) head_color_sitting else head_color) {
+          ctx.drawOval(-HEIGHT/2, -HEIGHT/2, HEIGHT, HEIGHT)
+        }
+    
+        if (!sitting(count)) {
+          ctx.withColor(Color.WHITE) {
+            ctx.drawString((couple(count)%2 + 1).toString, -4, 5)
+          }
+        }
+      }
     }
-
-    ctx.restore()
   }
 }

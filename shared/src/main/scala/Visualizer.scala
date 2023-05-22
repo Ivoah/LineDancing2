@@ -25,10 +25,9 @@ case class Visualizer(dance: Dance, num_couples: Int = 6) {
 
     ctx.clear()
 
-    ctx.save()
-    ctx.translate(ROOT)
-    dancers.foreach(_.draw(count, SCALE))
-    ctx.restore()
+    ctx.withTranslation(ROOT) {
+      dancers.foreach(_.draw(count, SCALE))
+    }
 
     dance.steps.get(range).foreach(_.zipWithIndex.foreach { case (step, i) =>
       ctx.drawString(f"${step._1} (${range.length} count${if (range.length == 1) "" else "s"}): ${progress*100}%.2f%%", 3, 20*(i + 1))

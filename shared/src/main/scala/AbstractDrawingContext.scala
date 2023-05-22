@@ -4,13 +4,10 @@ trait AbstractDrawingContext {
 
   def clear(): Unit
 
-  def save(): Unit
-  def restore(): Unit
+  def withColor(color: Color)(thunk: => Unit): Unit
 
-  def setColor(color: Color): Unit
-
-  def translate(pos: (Double, Double)): Unit
-  def rotate(angle: Double): Unit
+  def withTranslation(pos: (Double, Double))(thunk: => Unit): Unit
+  def withRotation(angle: Double)(thunk: => Unit): Unit
 
   def drawString(str: String, x: Int, y: Int): Unit
   def drawOval(x: Int, y: Int, w: Int, h: Int): Unit
