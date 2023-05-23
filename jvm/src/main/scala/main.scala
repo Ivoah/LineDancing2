@@ -7,19 +7,22 @@ import java.awt.Font
 import scala.swing.*
 import scala.swing.event.*
 import java.nio.file.Files
+import java.awt.RenderingHints
 
 @main
 def main(): Unit = {
   val mainFrame = new MainFrame {
     private val mainFrame = this
-    font = Font.createFont(Font.TRUETYPE_FONT, new File("Eczar.ttf")).deriveFont(13.0f)
-
+    
     private var visualizer: Visualizer = null
     private var song: Clip = null
-
+    
     private val graphicsPanel = new Panel {
+      font = Font.createFont(Font.TRUETYPE_FONT, new File("Eczar.ttf")).deriveFont(13.0f)
       override def paintComponent(g: Graphics2D): Unit = {
         super.paintComponent(g)
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
         implicit val ctx = SwingDrawingContext(g)
         visualizer.draw(song.getMicrosecondPosition/1000)
       }
