@@ -29,19 +29,15 @@ steps:
   val visualizer = Visualizer(dance)
 
   val audioElement = document.querySelector("audio").asInstanceOf[Audio]
-  var lastDraw = 0.0
+
   setInterval(10) {
     ctx.clear()
 
     visualizer.draw(audioElement.currentTime*1000)
-    ctx.drawString(f"${1000/((Date.now() - lastDraw))}%2.2f", ctx.width - 50, 20)
 
     val svgCtx = SvgDrawingContext(640, 480)
     visualizer.draw(audioElement.currentTime*1000)(svgCtx)
-    svgCtx.drawString(f"${1000/((Date.now() - lastDraw))}%2.2f", svgCtx.width - 50, 20)
-
     svgContainer.innerHTML = svgCtx.render()
-    lastDraw = Date.now()
   }
 
   canvas.onclick = { _ =>
