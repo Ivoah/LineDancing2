@@ -5,7 +5,10 @@ import scala.collection.mutable
 case class SvgDrawingContext(override val width: Int, override val height: Int) extends AbstractDrawingContext {
   val builder = mutable.StringBuilder(s"""<svg width="$width" height="$height" font-family="Eczar" font-size="13px">""")
 
-  def clear(): Unit = ()
+  def clear(): Unit = {
+    builder.clear()
+    builder ++= s"""<svg width="$width" height="$height" font-family="Eczar" font-size="13px">"""
+  }
 
   def withColor(color: Color)(thunk: => Unit): Unit = {
     builder ++= s"""<g color="$color" fill="$color">"""

@@ -1,7 +1,7 @@
 import Extensions.*
 
 import org.scalajs.dom.*
-import org.scalajs.dom.html.{Canvas, Div}
+import org.scalajs.dom.html.{Canvas, Div, Button}
 
 import scala.scalajs.js.timers.*
 import scala.scalajs.js.Date
@@ -10,8 +10,9 @@ import scala.scalajs.js.Date
 def main(): Unit = {
   val num_couples = 6
   val canvas = document.querySelector("canvas").asInstanceOf[Canvas]
-  implicit val ctx = CanvasDrawingContext(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
-  val svgContainer = document.getElementById("container").asInstanceOf[Div]
+  val canvasCtx = CanvasDrawingContext(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
+  val svgContainer = document.getElementById("svgContainer").asInstanceOf[Div]
+  val svgCtx = SvgDrawingContext(640, 480)
 
   val dance = Dance.fromYaml("""song: Hole in the Wall.wav
 marks: [1600, 33400, 66000, 98640, 131360, 162800, 194600, 226000]
@@ -31,18 +32,31 @@ steps:
   val audioElement = document.querySelector("audio").asInstanceOf[Audio]
 
   setInterval(10) {
-    ctx.clear()
+    if (canvas.style.display != "none") {
+      canvasCtx.clear()
+      visualizer.draw(audioElement.currentTime*1000)(canvasCtx)
+    }
 
-    visualizer.draw(audioElement.currentTime*1000)
-
-    val svgCtx = SvgDrawingContext(640, 480)
-    visualizer.draw(audioElement.currentTime*1000)(svgCtx)
-    svgContainer.innerHTML = svgCtx.render()
+    if (svgContainer.style.display != "none") {
+      svgCtx.clear()
+      visualizer.draw(audioElement.currentTime*1000)(svgCtx)
+      svgContainer.innerHTML = svgCtx.render()
+    }
   }
 
   canvas.onclick = { _ =>
     if (audioElement.paused) audioElement.play()
     else audioElement.pause()
     audioElement.focus(new FocusOptions{focusVisible = false})
+  }
+
+  document.getElementById("btnCanvas").asInstanceOf[Button].onclick = { _ =>
+    svgContainer.style.display = "none"
+    canvas.style.display = ""
+  }
+
+  document.getElementById("btnSvg").asInstanceOf[Button].onclick = { _ =>
+    canvas.style.display = "none"
+    svgContainer.style.display = ""
   }
 }
