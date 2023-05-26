@@ -12,7 +12,7 @@ case class Dancer(dance: Dance, starting_couple: Int, num_couples: Int, woman: B
   private val body_color_sitting = body_color.dimmed
   private val head_color_sitting = head_color.dimmed
 
-  protected def starting_pos(count: Double): ((Double, Double), Double) = {
+  private def starting_pos(count: Double): ((Double, Double), Double) = {
     val loop = count.toInt/dance.length
     (
       (
