@@ -1,5 +1,5 @@
 object Names {
-  val women = Seq(
+  val women: Seq[String] = Seq(
     "Allison",
     "Amber",
     "Anna",
@@ -27,7 +27,7 @@ object Names {
     "Shai",
     "Sophia"
   )
-  val men = Seq(
+  val men: Seq[String] = Seq(
     "Aaron",
     "Alex",
     "Ben",
@@ -54,6 +54,7 @@ object Names {
     "Philip",
     "Thaddaeus",
     "Tim",
+    "Treker",
     "Zach"
   )
 }
