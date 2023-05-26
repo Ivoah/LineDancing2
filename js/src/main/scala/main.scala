@@ -8,7 +8,6 @@ import scala.scalajs.js.Date
 
 @main
 def main(): Unit = {
-  val num_couples = 6
   val canvas = document.querySelector("canvas").asInstanceOf[Canvas]
   val canvasCtx = CanvasDrawingContext(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
   val svgContainer = document.getElementById("svgContainer").asInstanceOf[Div]

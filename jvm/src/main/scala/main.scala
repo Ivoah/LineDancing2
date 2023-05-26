@@ -23,7 +23,7 @@ def main(): Unit = {
         super.paintComponent(g)
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-        implicit val ctx = SwingDrawingContext(g)
+        implicit val ctx: Graphics2DDrawingContext = Graphics2DDrawingContext(g)
         visualizer.draw(song.getMicrosecondPosition/1000)
       }
 
