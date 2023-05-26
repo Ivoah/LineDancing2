@@ -38,7 +38,7 @@ case class Dancer(dance: Dance, starting_couple: Int, num_couples: Int, woman: B
     f(loop + offset) - loop%2
   }
 
-  def sitting(count: Double): Boolean = {
+  private def sitting(count: Double): Boolean = {
     val loop = count.toInt/dance.length
     couple(count) match {
       case c if c < 0 => true
