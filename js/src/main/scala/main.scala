@@ -26,7 +26,7 @@ steps:
   - Circle left halfway (6 counts)
   - 1st couple cast down 1 while 2nd couple lead up 1 (6 counts)
 """)
-  val visualizer = Visualizer(dance)
+  val visualizer = Visualizer(dance, 6)
 
   val audioElement = document.querySelector("audio").asInstanceOf[Audio]
 

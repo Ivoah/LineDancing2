@@ -2,7 +2,7 @@ import Extensions.*
 
 import scala.util.Random
 
-case class Visualizer(dance: Dance, num_couples: Int = 6) {
+case class Visualizer(dance: Dance, num_couples: Int) {
   private val SCALE: (Double, Double) = (100, 150)
   private def ROOT(implicit ctx: AbstractDrawingContext): (Double, Double) = (
     (ctx.width - (num_couples - 1)*SCALE._1)/2,
