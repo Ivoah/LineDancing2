@@ -3,11 +3,12 @@ import org.scalajs.dom.SVGTextElement
 import scala.collection.mutable
 
 case class SvgDrawingContext(override val width: Int, override val height: Int) extends AbstractDrawingContext {
-  private val builder = mutable.StringBuilder(s"""<svg width="$width" height="$height" font-family="Eczar" font-size="13px">""")
+  private val opening = s"""<svg width="$width" height="$height" font-family="Eczar" font-size="13px">"""
+  private val builder = mutable.StringBuilder(opening)
 
   def clear(): Unit = {
     builder.clear()
-    builder ++= s"""<svg width="$width" height="$height" font-family="Eczar" font-size="13px">"""
+    builder ++= opening
   }
 
   def withColor(color: Color)(thunk: => Unit): Unit = {
