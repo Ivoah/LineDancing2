@@ -1,9 +1,9 @@
 import org.scalajs.dom.CanvasRenderingContext2D
 
-case class CanvasDrawingContext(ctx: CanvasRenderingContext2D) extends AbstractDrawingContext {
+case class CanvasDrawingContext(ctx: CanvasRenderingContext2D, scale: Double) extends AbstractDrawingContext {
   ctx.font = "13px Eczar"
-  val width: Int = ctx.canvas.width
-  val height: Int = ctx.canvas.height
+  val width: Int = (ctx.canvas.width/scale).toInt
+  val height: Int = (ctx.canvas.height/scale).toInt
 
   def clear(): Unit = ctx.clearRect(0, 0, width, height)
 

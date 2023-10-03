@@ -9,7 +9,14 @@ import scala.scalajs.js.Date
 @main
 def main(): Unit = {
   val canvas = document.querySelector("canvas").asInstanceOf[Canvas]
-  val canvasCtx = CanvasDrawingContext(canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D])
+  val dpr = window.devicePixelRatio
+  canvas.width = (canvas.width*dpr).toInt
+  canvas.height = (canvas.height*dpr).toInt
+  val canvasCtx = CanvasDrawingContext({
+    val ctx = canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D]
+    ctx.scale(dpr, dpr)
+    ctx
+  }, dpr)
   val svgContainer = document.getElementById("svgContainer").asInstanceOf[Div]
   val svgCtx = SvgDrawingContext(640, 480)
 
