@@ -24,7 +24,9 @@ class LineDancing2 extends MainFrame {
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
       implicit val ctx: Graphics2DDrawingContext = Graphics2DDrawingContext(g)
-      visualizer.draw(song.getMicrosecondPosition / 1000)
+      if (visualizer != null) {
+        visualizer.draw(song.getMicrosecondPosition / 1000)
+      }
     }
 
     mouse.clicks.reactions += {
@@ -72,7 +74,7 @@ class LineDancing2 extends MainFrame {
             val chooser = new FileChooser(new File("."))
             chooser.fileFilter = new FileNameExtensionFilter("YAML files", "yml", "yaml")
             if (chooser.showOpenDialog(this) == FileChooser.Result.Approve) {
-              song.close()
+              if (song != null) song.close()
               loadDance(chooser.selectedFile.toPath)
             }
           })
@@ -164,11 +166,13 @@ def main(args: String*): Unit = {
   val conf = new Conf(args)
 
   val mainFrame = LineDancing2()
-  conf.dance.foreach(mainFrame.loadDance)
-  conf.couples.foreach(mainFrame.setNumCouples)
-  mainFrame.setMicrosecondPosition(conf.ms() * 1000)
-  if (conf.play()) {
-    mainFrame.play()
+  conf.dance.foreach{ dance =>
+    mainFrame.loadDance(dance)
+    conf.couples.foreach(mainFrame.setNumCouples)
+    mainFrame.setMicrosecondPosition(conf.ms() * 1000)
+    if (conf.play()) {
+      mainFrame.play()
+    }
   }
   mainFrame.visible = true
 }
