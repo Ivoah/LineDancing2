@@ -8,6 +8,7 @@ object Names {
     "Danielle",
     "Elena",
     "Eliza",
+    "Elizabeth",
     "Emma",
     "Esther",
     "Evelyn",
