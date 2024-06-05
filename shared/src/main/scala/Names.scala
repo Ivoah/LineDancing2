@@ -19,6 +19,7 @@ object Names {
     "Janna",
     "Katie",
     "Lilly",
+    "Lucy",
     "Lydia",
     "Maerin",
     "Mairead",
