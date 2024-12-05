@@ -2,7 +2,7 @@ lazy val LineDancing2 = crossProject(JSPlatform, JVMPlatform).crossType(CrossTyp
   .settings(
     name := "LineDancing2",
     version := "0.1-SNAPSHOT",
-    scalaVersion := "3.2.2",
+    scalaVersion := "3.3.4",
     libraryDependencies ++= Seq(
       "org.virtuslab" %%% "scala-yaml" % "0.0.7"
     )
