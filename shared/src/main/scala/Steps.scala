@@ -7,6 +7,10 @@ object Steps {
   type Step = (Dancer, Double, Double) => Option[((Double, Double), Double)]
 
   val steps: Map[Regex, (String => String) => Step] = Map[Regex, (String => String) => Step](
+    raw"Sit".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+      None
+    }),
+
     raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
       if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
           (
@@ -49,6 +53,13 @@ object Steps {
         case (0, true) => (-sin(t*Pi/2), cos(t*Pi/2) - 1)
         case (1, true) => (-cos(t*Pi/2) + 1, -sin(t*Pi/2))
       }, t*math.Pi))
+    }),
+
+    raw"Turn single (?<direction>left|right)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+      Some(((0, 0), meta("direction") match {
+        case "left" => -t*2*Pi
+        case "right" => t*2*Pi
+      }))
     })
   )
 }

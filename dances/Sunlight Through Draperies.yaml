@@ -1,0 +1,14 @@
+song: Sunlight Through Draperies.wav
+marks: [6000, 53000, 102000, 150000, 198000, 246500, 294000, 342000]
+
+steps:
+  - Turn single right (12 counts) # - 1st corners back-to-back, turn single right (12 counts)
+  - Turn single left (12 counts) # - Partners right gypsy (12 counts)
+  - Turn single right (12 counts) # - 2nd corners back-to-back, turn single left (12 counts)
+  - Turn single left (12 counts) # - Partners left gypsy (12 counts)
+  - Turn single right (12 counts) # - Circle right (12 counts)
+  - Turn single left (6 counts) # - Balance the ring (6 counts)
+  - Turn single right (6 counts)
+  - Turn single left (12 counts) # - Circle left (12 counts)
+  - Turn single right (6 counts) # - Balance the ring (6 counts)
+  - Turn single left (6 counts) # - 1st couple cast down 1 while 2nd couple lead up 1 (6 counts)
