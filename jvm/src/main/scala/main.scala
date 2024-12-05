@@ -13,8 +13,8 @@ class LineDancing2 extends MainFrame {
   private val mainFrame: MainFrame = this
 
   private var num_couples: Int = 6
-  private var visualizer: Visualizer = null
-  private var song: Clip = null
+  private var visualizer: Option[Visualizer] = None
+  private var song: Option[Clip] = None
 
   private val graphicsPanel = new Panel {
     font = Font.createFont(Font.TRUETYPE_FONT, new File("Eczar.ttf")).deriveFont(13.0f)
@@ -24,26 +24,24 @@ class LineDancing2 extends MainFrame {
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
       implicit val ctx: Graphics2DDrawingContext = Graphics2DDrawingContext(g)
-      if (visualizer != null) {
-        visualizer.draw(song.getMicrosecondPosition / 1000)
-      }
+      visualizer.foreach(_.draw(song.get.getMicrosecondPosition / 1000))
     }
 
     mouse.clicks.reactions += {
       case MousePressed(source, point, modifiers, clicks, triggersPopup) =>
-        if (song.isRunning) pause()
+        if (song.exists(_.isRunning)) pause()
         else play()
     }
     listenTo(mouse.clicks)
 
     keys.reactions += {
       case KeyPressed(source, key, modifiers, location) if key == Key.Space =>
-        if (song.isRunning) pause()
+        if (song.exists(_.isRunning)) pause()
         else play()
       case KeyPressed(source, key, modifiers, location) if key == Key.Left =>
-        setMicrosecondPosition(song.getMicrosecondPosition - 1000000)
+        setMicrosecondPosition(song.map(_.getMicrosecondPosition - 1000000).getOrElse(0))
       case KeyPressed(source, key, modifiers, location) if key == Key.Right =>
-        setMicrosecondPosition(song.getMicrosecondPosition + 1000000)
+        setMicrosecondPosition(song.map(_.getMicrosecondPosition + 1000000).getOrElse(0))
     }
     listenTo(keys)
 
@@ -56,11 +54,11 @@ class LineDancing2 extends MainFrame {
 
     mouse.clicks.reactions += {
       case MousePressed(source, point, modifiers, clicks, triggersPopup) =>
-        setMicrosecondPosition((point.x.toDouble / source.size.width * song.getMicrosecondLength).toLong)
+        setMicrosecondPosition(song.map(s => (point.x.toDouble / source.size.width * s.getMicrosecondLength)).getOrElse(0.0).toLong)
     }
     mouse.moves.reactions += {
       case MouseDragged(source, point, modifiers) =>
-        setMicrosecondPosition((point.x.toDouble / source.size.width * song.getMicrosecondLength).toLong)
+        setMicrosecondPosition(song.map(s => (point.x.toDouble / source.size.width * s.getMicrosecondLength)).getOrElse(0.0).toLong)
     }
     listenTo(mouse.clicks)
     listenTo(mouse.moves)
@@ -74,7 +72,7 @@ class LineDancing2 extends MainFrame {
             val chooser = new FileChooser(new File("."))
             chooser.fileFilter = new FileNameExtensionFilter("YAML files", "yml", "yaml")
             if (chooser.showOpenDialog(this) == FileChooser.Result.Approve) {
-              if (song != null) song.close()
+              song.foreach(_.close())
               loadDance(chooser.selectedFile.toPath)
             }
           })
@@ -93,7 +91,7 @@ class LineDancing2 extends MainFrame {
         )
       },
       new MenuItem(Action("Play/Pause") {
-        if (song.isRunning) pause() else play()
+        if (song.exists(_.isRunning)) pause() else play()
       })
     )
   }
@@ -112,35 +110,35 @@ class LineDancing2 extends MainFrame {
     val new_song: Clip = AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip]
     new_song.open(inputStream)
     progress.max = (new_song.getMicrosecondLength / 1000).toInt
-    visualizer = new_visualizer
-    song = new_song
+    visualizer = Some(new_visualizer)
+    song = Some(new_song)
     graphicsPanel.repaint()
   }
 
   def setNumCouples(new_num_couples: Int): Unit = {
     num_couples = new_num_couples
-    visualizer = Visualizer(visualizer.dance, num_couples)
+    visualizer = visualizer.map(v => Visualizer(v.dance, num_couples))
     graphicsPanel.repaint()
   }
 
   def setMicrosecondPosition(µs: Long): Unit = {
-    song.setMicrosecondPosition(µs)
+    song.foreach(_.setMicrosecondPosition(µs))
     timer.getActionListeners.foreach(_.actionPerformed(null))
   }
 
   def play(): Unit = {
-    song.start()
+    song.foreach(_.start())
     timer.start()
   }
 
   def pause(): Unit = {
-    song.stop()
+    song.foreach(_.stop())
     timer.stop()
   }
 
   private val timer: Timer = new Timer(10, _ => {
     graphicsPanel.repaint()
-    progress.value = (song.getMicrosecondPosition / 1000).toInt
+    progress.value = song.map(s => (s.getMicrosecondPosition / 1000).toInt).getOrElse(0)
   })
 }
 
@@ -166,13 +164,11 @@ def main(args: String*): Unit = {
   val conf = new Conf(args)
 
   val mainFrame = LineDancing2()
-  conf.dance.foreach{ dance =>
-    mainFrame.loadDance(dance)
-    conf.couples.foreach(mainFrame.setNumCouples)
-    mainFrame.setMicrosecondPosition(conf.ms() * 1000)
-    if (conf.play()) {
-      mainFrame.play()
-    }
+  conf.dance.foreach(mainFrame.loadDance)
+  conf.couples.foreach(mainFrame.setNumCouples)
+  mainFrame.setMicrosecondPosition(conf.ms() * 1000)
+  if (conf.play()) {
+    mainFrame.play()
   }
   mainFrame.visible = true
 }
