@@ -8,21 +8,32 @@
                 src: url(Eczar.ttf);
             }
 
-            canvas {
+            canvas, #clickBox, #svgContainer {
                 width: 640px;
                 height: 480px;
                 display: block;
+            }
+
+            audio {
+                width: 640px;
+                margin-top: 5px;
+            }
+
+            #clickBox {
+                position: absolute;
+                z-index: 1;
             }
         </style>
     </head>
     <body>
         <button id="btnCanvas">canvas</button>
         <button id="btnSvg">svg</button>
-        <br>
-        <canvas width="640" height="480" style="display: none;"></canvas>
-        <div id="svgContainer" style="width: 640px; height: 480px;"></div>
-        <br>
-        <audio controls preload="auto" style="width: 640px">
+        <div>
+            <div id="clickBox"></div>
+            <canvas width="640" height="480" style="display: none;"></canvas>
+            <div id="svgContainer"></div>
+        </div>
+        <audio controls preload="auto">
             <source src="dances/Hole in the Wall.wav">
         </audio>
         <script type="text/javascript" src="js/target/scala-3.3.4/linedancing2-opt/main.js"></script>

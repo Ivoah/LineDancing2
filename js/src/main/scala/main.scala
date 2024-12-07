@@ -37,7 +37,7 @@ steps:
 
   val audioElement = document.querySelector("audio").asInstanceOf[Audio]
 
-  setInterval(10) {
+  def updateAnimation(ts: Double): Unit = {
     if (canvas.style.display != "none") {
       canvasCtx.clear()
       visualizer.draw(audioElement.currentTime*1000)(canvasCtx)
@@ -48,9 +48,12 @@ steps:
       visualizer.draw(audioElement.currentTime*1000)(svgCtx)
       svgContainer.innerHTML = svgCtx.render()
     }
+    window.requestAnimationFrame(updateAnimation)
   }
 
-  canvas.onclick = { _ =>
+  window.requestAnimationFrame(updateAnimation)
+
+  document.getElementById("clickBox").asInstanceOf[Div].onclick = { _ =>
     if (audioElement.paused) audioElement.play()
     else audioElement.pause()
     audioElement.focus(new FocusOptions{focusVisible = false})
