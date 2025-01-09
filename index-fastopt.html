@@ -7,31 +7,34 @@
                 font-family: Eczar;
                 src: url(Eczar.ttf);
             }
-
-            canvas, #clickBox, #svgContainer {
+            
+            canvas, #clickBox, #svgContainer, #g9Container > svg {
                 width: 640px;
                 height: 480px;
                 display: block;
             }
-
+            
             audio {
                 width: 640px;
                 margin-top: 5px;
             }
-
+            
             #clickBox {
                 position: absolute;
                 z-index: 1;
             }
         </style>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/g9/1.0.16/g9.js'></script>
     </head>
     <body>
         <button id="btnCanvas">canvas</button>
         <button id="btnSvg">svg</button>
+        <button id="btnG9">g9</button>
         <div>
-            <div id="clickBox"></div>
+            <!-- <div id="clickBox"></div> -->
             <canvas width="640" height="480" style="display: none;"></canvas>
-            <div id="svgContainer"></div>
+            <div id="svgContainer" style="display: none;"></div>
+            <div id="g9Container"></div>
         </div>
         <audio controls preload="auto">
             <source src="dances/Hole in the Wall.wav">
