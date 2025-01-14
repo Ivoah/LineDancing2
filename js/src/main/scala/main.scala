@@ -60,10 +60,10 @@ steps:
       g9.setData(js.Dynamic.literal("t" -> audioElement.currentTime*1000))
     }
     
-    window.requestAnimationFrame(updateAnimation)
+    window.requestAnimationFrame(updateAnimation _)
   }
 
-  window.requestAnimationFrame(updateAnimation)
+  window.requestAnimationFrame(updateAnimation _)
 
   // document.getElementById("clickBox").asInstanceOf[Div].onclick = { _ =>
   //   if (audioElement.paused) audioElement.play()

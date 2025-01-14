@@ -36,7 +36,6 @@ class G9DrawingContext(ctx: Dynamic) extends AbstractDrawingContext {
   }
 
   override def drawOval(x: Int, y: Int, w: Int, h: Int): Unit = {
-    println(s"oval: x=$x, y=$y, r=$w")
     ctx.point(x + transform._1, y + transform._2, Dynamic.literal("r" -> w, "fill" -> fill.toString))
   }
 
