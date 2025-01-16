@@ -3,24 +3,42 @@ import Extensions.*
 import scala.math.*
 import scala.util.matching.Regex
 
+import org.virtuslab.yaml.{StringOps, YamlCodec}
+import net.ivoah.lisp
+
+import net.ivoah.lisp.fnConversion
+
+val stepsYaml = """
+"Sit": nil
+"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)":
+  (if (= (= (% (dancer.couple count) 2) 0) (= couple "1st"))
+    (map
+      "x" (* (+ (/ (- (cos (* t Pi))) 2) 0.5) places (if (= direction "up") -1 1))
+      "y" (* (/ (sin (* t Pi)) 3) (if dancer.woman -1 1))
+      "r" (* (- t) Pi 2 (if dancer.woman -1 1) (if (= direction "up") -1 1))
+    )
+    nil
+  )
+"""
+
 object Steps {
   type Step = (Dancer, Double, Double) => Option[((Double, Double), Double)]
-
+  
   val steps: Map[Regex, (String => String) => Step] = Map[Regex, (String => String) => Step](
     raw"Sit".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
       None
     }),
 
-    raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
-      if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
-          (
-            (-cos(t * Pi) / 2 + 0.5) * meta("places").toInt * (if (meta("direction") == "up") -1 else 1),
-            sin(t * Pi) / 3 * (if (dancer.woman) -1 else 1)
-          ),
-          -t * math.Pi*2 * (if (dancer.woman) -1 else 1) * (if (meta("direction") == "up") -1 else 1)
-        ))
-      else None
-    }),
+    // raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+    //   if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
+    //       (
+    //         (-cos(t * Pi) / 2 + 0.5) * meta("places").toInt * (if (meta("direction") == "up") -1 else 1),
+    //         sin(t * Pi) / 3 * (if (dancer.woman) -1 else 1)
+    //       ),
+    //       -t * math.Pi*2 * (if (dancer.woman) -1 else 1) * (if (meta("direction") == "up") -1 else 1)
+    //     ))
+    //   else None
+    // }),
 
     raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
       if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
@@ -61,5 +79,44 @@ object Steps {
         case "right" => t*2*Pi
       }))
     })
-  )
+  ) ++ stepsYaml.as[Map[String, String]].toOption.get.map {
+    case (re, code) =>
+      val ast = lisp.parse(code)
+      re.r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+        val pos = ast.eval(lisp.stdlib ++ Map[String, lisp.Value](
+          "dancer.couple" -> lisp.Function { case Seq(a1: Double) => dancer.couple(a1).asInstanceOf[Double] },
+          "dancer.woman" -> dancer.woman,
+          "count" -> count,
+          "t" -> t,
+          "couple" -> meta("couple"),
+          "direction" -> meta("direction"),
+          "places" -> meta("places").toDouble
+        )).asInstanceOf[Map[String, Double]]
+        Option(pos).map(pos => {
+          println(pos.keys.head.length)
+          ((pos("x"), pos("y")), pos("r"))
+        })
+      })
+  }
+}
+
+@main
+def testSteps() = {
+  implicit val ctx = NullDrawingContext(640, 480)
+  val dance = Dance.fromYaml("""
+  song: Hole in the Wall.wav
+  marks: [1600, 33400, 66000, 98640, 131360, 162800, 194600, 226000]
+
+  steps:
+    - 1st couple cast down 2 (4 counts)
+    - 1st couple lead up 2 (8 counts)
+    - 2nd couple cast up 2 (4 counts)
+    - 2nd couple lead down 2 (8 counts)
+    - 1st corners cross right shoulders (6 counts)
+    - 2nd corners cross right shoulders (6 counts)
+    - Circle left halfway (6 counts)
+    - 1st couple cast down 1 while 2nd couple lead up 1 (6 counts)
+  """)
+  val visualizer = Visualizer(dance, 6)
+  visualizer.draw(dance.marks.head + 1)
 }

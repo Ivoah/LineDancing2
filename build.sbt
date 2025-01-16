@@ -1,11 +1,13 @@
-lazy val LineDancing2 = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Full).in(file("."))
+import org.scalajs.linker.interface.ModuleInitializer
+lazy val LineDancing2 = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Full).in(file("."))
   .settings(
     name := "LineDancing2",
     version := "0.1-SNAPSHOT",
     scalaVersion := "3.3.4",
     libraryDependencies ++= Seq(
       "org.virtuslab" %%% "scala-yaml" % "0.0.7"
-    )
+    ),
+    Compile / mainClass := Some("main")
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
