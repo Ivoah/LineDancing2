@@ -2,11 +2,17 @@ package net.ivoah.lisp
 
 import scala.collection.mutable.{Stack, ListBuffer}
 
-given fnConversion[A, B]: Conversion[A => B, Function] = f => Function { case Seq(a1: A) => f(a1).asInstanceOf[Value] }
-case class Function(fn: Seq[Value] => Value)
+case class VarArgs(fn: Seq[Value] => Value)
 
 // type Value = Null | Boolean | Double | String | Function
 type Value = Any
+
+extension(v: Value) {
+  def cast[T]: T = v match {
+    case i: Int => i.toDouble.asInstanceOf[T]
+    case _ => v.asInstanceOf[T]
+  }
+}
 
 type Environment = Map[String, Value]
 
@@ -20,27 +26,40 @@ case class LispList(elements: Expr*) extends Expr {
   override def eval(implicit env: Environment): Value = {
     val args = elements.tail.map(_.eval)
     elements.head.eval() match {
-      case Function(fn) => fn(args)
-      case map: Map[Value, Value] if args.length == 1 => map(args.head)
+      case VarArgs(fn) => fn(args)
+      case fn: Function0[_] => fn()
+      case fn: Function1[t0, _] => fn(args(0).cast[t0])
+      case fn: Function2[t0, t1, _] => fn(args(0).cast[t0], args(1).cast[t1])
+      case fn: Function3[t0, t1, t2, _] => fn(args(0).cast[t0], args(1).cast[t1], args(2).cast[t2])
+      case fn: Function4[t0, t1, t2, t3, _] => fn(args(0).cast[t0], args(1).cast[t1], args(2).cast[t2], args(3).cast[t3])
+      case fn: Function5[t0, t1, t2, t3, t4, _] => fn(args(0).cast[t0], args(1).cast[t1], args(2).cast[t2], args(3).cast[t3], args(4).cast[t4])
     }
   }
 }
 
-case class Atom(value: String) extends Expr {
-  override def toString(): String = value.toString
-
-  override def eval(implicit env: Environment): Value = {
-    value match {
-      case "nil" => null
-      case boolean if boolean.toBooleanOption.nonEmpty => boolean.toBoolean
-      case number if number.toDoubleOption.nonEmpty => number.toDouble
-      case s if s.startsWith("\"") && s.endsWith("\"") => s.substring(1, s.length - 1)
-      case identifier if env.contains(identifier) => env(identifier)
-    }
+case class Constant[T <: Value](value: T) extends Expr {
+  override def toString(): String = value match {
+    case v if v == null => "nil"
+    case string: String => s"\"$string\""
+    case other => other.toString
   }
+  override def eval(implicit env: Environment): Value = value
 }
 
-object Atom {
+case class Identifier(val identifier: String) extends Expr {
+  override def toString(): String = identifier
+  override def eval(implicit env: Environment): Value = env(identifier)
+}
+
+def atom(value: String): Expr = {
+  value match {
+    case "nil"                                                => Constant(null)
+    case boolean    if boolean.toBooleanOption.nonEmpty       => Constant(boolean.toBoolean)
+    case int        if int.toIntOption.nonEmpty               => Constant(int.toInt)
+    case double     if double.toDoubleOption.nonEmpty         => Constant(double.toDouble)
+    case s          if s.startsWith("\"") && s.endsWith("\"") => Constant(s.substring(1, s.length - 1))
+    case identifier                                           => Identifier(identifier)
+  }
 }
 
 type Token = String
@@ -60,24 +79,24 @@ def tokenize(chars: String): Seq[Token] = {
   }.toSeq.flatten.filter(_.nonEmpty)
 }
 
-def read_from_tokens(tokens: Stack[Token]): Expr = {
+def parse(tokens: Stack[Token]): Expr = {
   if (tokens.isEmpty) throw Exception("Unexpected EOF")
   tokens.pop() match {
     case "(" =>
       val L = ListBuffer[Expr]()
       while (tokens.top != ")") {
-        L.append(read_from_tokens(tokens))
+        L.append(parse(tokens))
       }
       tokens.pop()
       LispList(L.toSeq*)
     case ")" => throw Exception("Unexpected )")
-    case token => Atom(token)
+    case token => atom(token)
   }
 }
 
 def parse(code: String): Expr = {
   val tokens = Stack.from(tokenize(code))
-  val expr = read_from_tokens(tokens)
+  val expr = parse(tokens)
   if (tokens.nonEmpty) throw Exception(s"Expected end of input")
   expr
 }
@@ -85,34 +104,44 @@ def parse(code: String): Expr = {
 def eval(code: String)(implicit env: Environment) = parse(code).eval()
 
 implicit val stdlib: Environment = Map(
-  "+" -> Function(_.map(_.asInstanceOf[Double]).sum),
-  "-" -> Function {
+  "+" -> VarArgs(_.map(_.cast[Double]).sum),
+  "-" -> VarArgs {
     case Seq(a: Double) => -a
     case Seq(a: Double, b: Double) => a - b
   },
-  "*" -> Function(_.map(_.asInstanceOf[Double]).product),
-  "/" -> Function {
-    case Seq(a: Double, b: Double) => a/b
-  },
-  "%" -> Function { case Seq(a: Double, b: Double) => a%b },
-  "=" -> Function(args => args.forall(_ == args.head)),
-  "if" -> Function { case Seq(condition: Boolean, return1, return2) =>
+  "*" -> VarArgs(_.map(_.cast[Double]).product),
+  "/" -> ((a: Double, b: Double) => a/b),
+  "%" -> ((a: Double, b: Double) => a%b),
+  "=" -> VarArgs(args => args.forall(_ == args.head)),
+  "if" -> ((condition: Boolean, return1: Any, return2: Any) => {
     if (condition) return1
     else return2
-  },
-  "map" -> Function { case args if args.length%2 == 0 =>
+  }),
+  "map" -> VarArgs { case args if args.length%2 == 0 =>
     args.grouped(2).map { case Seq(key, value) => key -> value }.toMap
   },
+  "int" -> ((n: Value) => n match {
+    case int:    Int    => int.toInt
+    case double: Double => double.toInt
+    case string: String => string.toInt
+  }),
+  "float" -> ((n: Value) => n match {
+    case int:    Int    => int.toDouble
+    case double: Double => double.toDouble
+    case string: String => string.toDouble
+  }),
+  "seq" -> VarArgs(identity),
   "Pi" -> math.Pi,
-  "cos" -> fnConversion(math.cos),
-  "sin" -> fnConversion(math.sin)
+  "cos" -> math.cos,
+  "sin" -> math.sin
 )
 
 @main
 def lispTest() = {
   val code = """
-    "foo"
+    (sin 4)
   """
-  println(code)
-  println(eval(code)(stdlib ++ Map("t" -> 0.5)))
+  val ast = parse(code)
+  println(ast)
+  println(ast.eval(stdlib ++ Map("t" -> 0.5)))
 }

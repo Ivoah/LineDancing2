@@ -11,7 +11,6 @@ object Dance {
         val counts = counts_s.toInt
         val steps = steps_s.split(" while ").map { step =>
           Steps.steps.flatMap { case (regex, fn) =>
-            // println(regex)
             regex.findFirstMatchIn(step).map(m => (step, fn(m.group)))
           }.head
         }.toSeq

@@ -6,8 +6,6 @@ import scala.util.matching.Regex
 import org.virtuslab.yaml.{StringOps, YamlCodec}
 import net.ivoah.lisp
 
-import net.ivoah.lisp.fnConversion
-
 val stepsYaml = """
 "Sit": nil
 "(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)":
@@ -84,7 +82,7 @@ object Steps {
       val ast = lisp.parse(code)
       re.r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
         val pos = ast.eval(lisp.stdlib ++ Map[String, lisp.Value](
-          "dancer.couple" -> lisp.Function { case Seq(a1: Double) => dancer.couple(a1).asInstanceOf[Double] },
+          "dancer.couple" -> dancer.couple,
           "dancer.woman" -> dancer.woman,
           "count" -> count,
           "t" -> t,
@@ -92,10 +90,7 @@ object Steps {
           "direction" -> meta("direction"),
           "places" -> meta("places").toDouble
         )).asInstanceOf[Map[String, Double]]
-        Option(pos).map(pos => {
-          println(pos.keys.head.length)
-          ((pos("x"), pos("y")), pos("r"))
-        })
+        Option(pos).map(pos => ((pos("x"), pos("y")), pos("r")))
       })
   }
 }
