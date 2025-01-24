@@ -3,6 +3,7 @@ package net.ivoah.lisp
 import scala.collection.mutable.{Stack, ListBuffer}
 
 case class VarArgs(fn: Seq[Value] => Value)
+case class Fn()
 
 // type Value = Null | Boolean | Double | String | Function
 type Value = Any
@@ -18,6 +19,21 @@ type Environment = Map[String, Value]
 
 sealed trait Expr {
   def eval(implicit env: Environment): Value
+}
+
+case class FnDef(parameters: Seq[Identifier], body: Expr) extends Expr {
+  override def toString(): String = s"(fn (${parameters.mkString(" ")}) $body)"
+
+  override def eval(implicit env: Environment): Value = {
+    parameters match {
+      case Seq() => () => body.eval(env ++ Map())
+      case Seq(p1) => (pp1: Value) => body.eval(env ++ Map(p1.identifier -> pp1))
+      case Seq(p1, p2) => (pp1: Value, pp2: Value) => body.eval(env ++ Map(p1.identifier -> pp1, p2.identifier -> pp2))
+      case Seq(p1, p2, p3) => (pp1: Value, pp2: Value, pp3: Value) => body.eval(env ++ Map(p1.identifier -> pp1, p2.identifier -> pp2, p3.identifier -> pp3))
+      case Seq(p1, p2, p3, p4) => (pp1: Value, pp2: Value, pp3: Value, pp4: Value) => body.eval(env ++ Map(p1.identifier -> pp1, p2.identifier -> pp2, p3.identifier -> pp3, p4.identifier -> pp4))
+      case Seq(p1, p2, p3, p4, p5) => (pp1: Value, pp2: Value, pp3: Value, pp4: Value, pp5: Value) => body.eval(env ++ Map(p1.identifier -> pp1, p2.identifier -> pp2, p3.identifier -> pp3, p4.identifier -> pp4, p5.identifier -> pp5))
+    }
+  }
 }
 
 case class LispList(elements: Expr*) extends Expr {
@@ -88,7 +104,10 @@ def parse(tokens: Stack[Token]): Expr = {
         L.append(parse(tokens))
       }
       tokens.pop()
-      LispList(L.toSeq*)
+      L.toSeq match {
+        case Seq(Identifier("fn"), parameters: LispList, body: Expr) => FnDef(parameters.elements.map(_.asInstanceOf[Identifier]), body)
+        case l => LispList(l*)
+      }
     case ")" => throw Exception("Unexpected )")
     case token => atom(token)
   }
@@ -133,15 +152,15 @@ implicit val stdlib: Environment = Map(
   "seq" -> VarArgs(identity),
   "Pi" -> math.Pi,
   "cos" -> math.cos,
-  "sin" -> math.sin
+  "sin" -> math.sin,
 )
 
 @main
 def lispTest() = {
   val code = """
-    (sin 4)
+    (fn (n) (+ n 3))
   """
   val ast = parse(code)
   println(ast)
-  println(ast.eval(stdlib ++ Map("t" -> 0.5)))
+  println(ast.eval().asInstanceOf[Function1[Double, Double]](9))
 }
