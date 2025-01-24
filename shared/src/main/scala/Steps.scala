@@ -9,20 +9,22 @@ import net.ivoah.lisp
 val stepsYaml = """
 "Sit": nil
 "(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)":
-  (if (= (= (% (dancer.couple count) 2) 0) (= couple "1st"))
-    (map
-      "x" (* (+ (/ (- (cos (* t Pi))) 2) 0.5) places (if (= direction "up") -1 1))
-      "y" (* (/ (sin (* t Pi)) 3) (if dancer.woman -1 1))
-      "r" (* (- t) Pi 2 (if dancer.woman -1 1) (if (= direction "up") -1 1))
+  (fn (dancer count t)
+    (if (= (= (% ((. dancer couple) count) 2) 0) (= couple "1st"))
+      (seq
+        (* (+ (/ (- (cos (* t Pi))) 2) 0.5) (float places) (if (= direction "up") -1 1))
+        (* (/ (sin (* t Pi)) 3) (if ((. dancer woman)) -1 1))
+        (* (- t) Pi 2 (if ((. dancer woman)) -1 1) (if (= direction "up") -1 1))
+      )
+      nil
     )
-    nil
   )
 """
 
 object Steps {
   type Step = (Dancer, Double, Double) => Option[((Double, Double), Double)]
   
-  val steps: Map[Regex, (String => String) => Step] = Map[Regex, (String => String) => Step](
+  val steps: Map[Regex, Map[String, String] => Step] = Map[Regex, Map[String, String] => Step](
     raw"Sit".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
       None
     }),
@@ -38,7 +40,7 @@ object Steps {
     //   else None
     // }),
 
-    raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+    raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)".r -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
       if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
           (
             (-cos(t*Pi)/2 + 0.5)*meta("places").toInt*(if (meta("direction") == "up") -1 else 1),
@@ -49,7 +51,7 @@ object Steps {
       else None
     }),
 
-    raw"(?<corners>1st|2nd) corners cross right shoulders".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+    raw"(?<corners>1st|2nd) corners cross right shoulders".r -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
       ((dancer.couple(count)%2, dancer.woman, meta("corners")) match {
         case (1, true, "1st") => Some((1.0, 1.0))
         case (0, false, "1st") => Some((-1.0, -1.0))
@@ -62,7 +64,7 @@ object Steps {
       ))
     }),
 
-    raw"Circle (?<direction>left|right) halfway".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+    raw"Circle (?<direction>left|right) halfway".r -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
       Some(((dancer.couple(count)%2, dancer.woman) match {
         case (1, false) => (sin(t*Pi/2), -cos(t*Pi/2) + 1)
         case (0, false) => (cos(t*Pi/2) - 1, sin(t*Pi/2))
@@ -71,7 +73,7 @@ object Steps {
       }, t*math.Pi))
     }),
 
-    raw"Turn single (?<direction>left|right)".r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+    raw"Turn single (?<direction>left|right)".r -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
       Some(((0, 0), meta("direction") match {
         case "left" => -t*2*Pi
         case "right" => t*2*Pi
@@ -80,17 +82,12 @@ object Steps {
   ) ++ stepsYaml.as[Map[String, String]].toOption.get.map {
     case (re, code) =>
       val ast = lisp.parse(code)
-      re.r -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
-        val pos = ast.eval(lisp.stdlib ++ Map[String, lisp.Value](
-          "dancer.couple" -> dancer.couple,
-          "dancer.woman" -> dancer.woman,
-          "count" -> count,
-          "t" -> t,
-          "couple" -> meta("couple"),
-          "direction" -> meta("direction"),
-          "places" -> meta("places").toDouble
-        )).asInstanceOf[Map[String, Double]]
-        Option(pos).map(pos => ((pos("x"), pos("y")), pos("r")))
+      re.r -> ((meta: Map[String, String]) => {
+        val fn = ast.eval(lisp.stdlib ++ meta).asInstanceOf[Function3[Dancer, Double, Double, Seq[Double]]]
+        (dancer: Dancer, count: Double, t: Double) => {
+          val pos = fn(dancer, count, t)
+          Option(pos).map{case Seq(x, y, r) => ((x, y), r)}
+        }
       })
   }
 }

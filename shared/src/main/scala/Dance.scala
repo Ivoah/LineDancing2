@@ -11,7 +11,8 @@ object Dance {
         val counts = counts_s.toInt
         val steps = steps_s.split(" while ").map { step =>
           Steps.steps.flatMap { case (regex, fn) =>
-            regex.findFirstMatchIn(step).map(m => (step, fn(m.group)))
+            val groups = raw"\?<(\w+)>".r.findAllMatchIn(regex.regex).map(_.group(1))
+            regex.findFirstMatchIn(step).map(m => (step, fn(groups.map(g => g -> m.group(g)).toMap)))
           }.head
         }.toSeq
         val pair = (last until last + counts) -> steps

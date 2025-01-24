@@ -53,6 +53,16 @@ case class LispList(elements: Expr*) extends Expr {
   }
 }
 
+case class ObjAccess(obj: Identifier, field: Identifier) extends Expr {
+  override def toString: String = s"(. $obj $field)"
+
+  override def eval(implicit env: Environment): Value = {
+    val o = obj.eval
+    val fn = o.getClass.getMethods.find(_.getName == field.identifier).get
+    VarArgs(args => fn.invoke(o, args*))
+  }
+}
+
 case class Constant[T <: Value](value: T) extends Expr {
   override def toString(): String = value match {
     case v if v == null => "nil"
@@ -79,6 +89,7 @@ def atom(value: String): Expr = {
 }
 
 type Token = String
+
 def tokenize(chars: String): Seq[Token] = {
   Iterator.unfold(("", 0)) { case (curTok, i) =>
     chars.lift(i) match {
@@ -106,6 +117,7 @@ def parse(tokens: Stack[Token]): Expr = {
       tokens.pop()
       L.toSeq match {
         case Seq(Identifier("fn"), parameters: LispList, body: Expr) => FnDef(parameters.elements.map(_.asInstanceOf[Identifier]), body)
+        case Seq(Identifier("."), obj: Identifier, field: Identifier) => ObjAccess(obj, field)
         case l => LispList(l*)
       }
     case ")" => throw Exception("Unexpected )")
@@ -152,15 +164,20 @@ implicit val stdlib: Environment = Map(
   "seq" -> VarArgs(identity),
   "Pi" -> math.Pi,
   "cos" -> math.cos,
-  "sin" -> math.sin,
+  "sin" -> math.sin
 )
 
 @main
 def lispTest() = {
+  class Foo() {
+    def bar = "hi"
+    def baz(n: Double) = n*2
+  }
+
   val code = """
-    (fn (n) (+ n 3))
+    ((. obj baz) 13)
   """
   val ast = parse(code)
   println(ast)
-  println(ast.eval().asInstanceOf[Function1[Double, Double]](9))
+  println(ast.eval(stdlib ++ Map("obj" -> Foo())))
 }
