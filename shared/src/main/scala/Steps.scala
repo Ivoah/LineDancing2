@@ -13,8 +13,8 @@ val stepsYaml = """
     (if (= (= (% ((. dancer couple) count) 2) 0) (= couple "1st"))
       (seq
         (* (+ (/ (- (cos (* t Pi))) 2) 0.5) (float places) (if (= direction "up") -1 1))
-        (* (/ (sin (* t Pi)) 3) (if ((. dancer woman)) -1 1))
-        (* (- t) Pi 2 (if ((. dancer woman)) -1 1) (if (= direction "up") -1 1))
+        (* (/ (sin (* t Pi)) 3) (if (. dancer woman) -1 1))
+        (* (- t) Pi 2 (if (. dancer woman) -1 1) (if (= direction "up") -1 1))
       )
       nil
     )
@@ -83,11 +83,8 @@ object Steps {
     case (re, code) =>
       val ast = lisp.parse(code)
       re.r -> ((meta: Map[String, String]) => {
-        val fn = ast.eval(lisp.stdlib ++ meta).asInstanceOf[Function3[Dancer, Double, Double, Seq[Double]]]
-        (dancer: Dancer, count: Double, t: Double) => {
-          val pos = fn(dancer, count, t)
-          Option(pos).map{case Seq(x, y, r) => ((x, y), r)}
-        }
+        val fn = ast.eval(lisp.stdlib ++ meta).asInstanceOf[Function3[Map[String, lisp.Value], Double, Double, Seq[Double]]]
+        (dancer: Dancer, count: Double, t: Double) => Option(fn(Map("couple" -> dancer.couple, "woman" -> dancer.woman), count, t)).map{case Seq(x, y, r) => ((x, y), r)}
       })
   }
 }

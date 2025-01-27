@@ -15,6 +15,8 @@ extension(v: Value) {
   }
 }
 
+type LispObj = Map[String, Value]
+
 type Environment = Map[String, Value]
 
 sealed trait Expr {
@@ -27,16 +29,16 @@ case class FnDef(parameters: Seq[Identifier], body: Expr) extends Expr {
   override def eval(implicit env: Environment): Value = {
     parameters match {
       case Seq() => () => body.eval(env ++ Map())
-      case Seq(p1) => (pp1: Value) => body.eval(env ++ Map(p1.identifier -> pp1))
-      case Seq(p1, p2) => (pp1: Value, pp2: Value) => body.eval(env ++ Map(p1.identifier -> pp1, p2.identifier -> pp2))
-      case Seq(p1, p2, p3) => (pp1: Value, pp2: Value, pp3: Value) => body.eval(env ++ Map(p1.identifier -> pp1, p2.identifier -> pp2, p3.identifier -> pp3))
-      case Seq(p1, p2, p3, p4) => (pp1: Value, pp2: Value, pp3: Value, pp4: Value) => body.eval(env ++ Map(p1.identifier -> pp1, p2.identifier -> pp2, p3.identifier -> pp3, p4.identifier -> pp4))
-      case Seq(p1, p2, p3, p4, p5) => (pp1: Value, pp2: Value, pp3: Value, pp4: Value, pp5: Value) => body.eval(env ++ Map(p1.identifier -> pp1, p2.identifier -> pp2, p3.identifier -> pp3, p4.identifier -> pp4, p5.identifier -> pp5))
+      case Seq(p1) => (pp1: Value) => body.eval(env ++ Map(p1.name -> pp1))
+      case Seq(p1, p2) => (pp1: Value, pp2: Value) => body.eval(env ++ Map(p1.name -> pp1, p2.name -> pp2))
+      case Seq(p1, p2, p3) => (pp1: Value, pp2: Value, pp3: Value) => body.eval(env ++ Map(p1.name -> pp1, p2.name -> pp2, p3.name -> pp3))
+      case Seq(p1, p2, p3, p4) => (pp1: Value, pp2: Value, pp3: Value, pp4: Value) => body.eval(env ++ Map(p1.name -> pp1, p2.name -> pp2, p3.name -> pp3, p4.name -> pp4))
+      case Seq(p1, p2, p3, p4, p5) => (pp1: Value, pp2: Value, pp3: Value, pp4: Value, pp5: Value) => body.eval(env ++ Map(p1.name -> pp1, p2.name -> pp2, p3.name -> pp3, p4.name -> pp4, p5.name -> pp5))
     }
   }
 }
 
-case class LispList(elements: Expr*) extends Expr {
+case class ListExpr(elements: Expr*) extends Expr {
   override def toString(): String = elements.mkString("(", " ", ")")
 
   override def eval(implicit env: Environment): Value = {
@@ -57,9 +59,7 @@ case class ObjAccess(obj: Identifier, field: Identifier) extends Expr {
   override def toString: String = s"(. $obj $field)"
 
   override def eval(implicit env: Environment): Value = {
-    val o = obj.eval
-    val fn = o.getClass.getMethods.find(_.getName == field.identifier).get
-    VarArgs(args => fn.invoke(o, args*))
+    obj.eval().asInstanceOf[LispObj](field.name)
   }
 }
 
@@ -72,9 +72,9 @@ case class Constant[T <: Value](value: T) extends Expr {
   override def eval(implicit env: Environment): Value = value
 }
 
-case class Identifier(val identifier: String) extends Expr {
-  override def toString(): String = identifier
-  override def eval(implicit env: Environment): Value = env(identifier)
+case class Identifier(val name: String) extends Expr {
+  override def toString(): String = name
+  override def eval(implicit env: Environment): Value = env(name)
 }
 
 def atom(value: String): Expr = {
@@ -116,9 +116,9 @@ def parse(tokens: Stack[Token]): Expr = {
       }
       tokens.pop()
       L.toSeq match {
-        case Seq(Identifier("fn"), parameters: LispList, body: Expr) => FnDef(parameters.elements.map(_.asInstanceOf[Identifier]), body)
+        case Seq(Identifier("fn"), parameters: ListExpr, body: Expr) => FnDef(parameters.elements.map(_.asInstanceOf[Identifier]), body)
         case Seq(Identifier("."), obj: Identifier, field: Identifier) => ObjAccess(obj, field)
-        case l => LispList(l*)
+        case l => ListExpr(l*)
       }
     case ")" => throw Exception("Unexpected )")
     case token => atom(token)
@@ -169,15 +169,12 @@ implicit val stdlib: Environment = Map(
 
 @main
 def lispTest() = {
-  class Foo() {
-    def bar = "hi"
-    def baz(n: Double) = n*2
-  }
-
   val code = """
-    ((. obj baz) 13)
+    (+ (. obj baz) 13)
   """
   val ast = parse(code)
   println(ast)
-  println(ast.eval(stdlib ++ Map("obj" -> Foo())))
+  println(ast.eval(stdlib ++ Map(
+    "obj" -> Map("baz" -> 10)
+  )))
 }
