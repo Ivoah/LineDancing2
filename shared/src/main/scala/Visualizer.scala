@@ -24,7 +24,11 @@ case class Visualizer(dance: Dance, num_couples: Int) {
     val progress = (count%dance.length - range.start)/range.length
 
     ctx.withTranslation(ROOT) {
-      dancers.foreach(_.draw(count, SCALE))
+      dancers.foreach(dancer => {
+        ctx.withShadow {
+          dancer.draw(count, SCALE)
+        }
+      })
     }
 
     val currentSteps = dance.steps(range).map(s => s"${s._1} (${range.length} count${if (range.length == 1) "" else "s"})")

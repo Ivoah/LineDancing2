@@ -3,7 +3,20 @@ import org.scalajs.dom.SVGTextElement
 import scala.collection.mutable
 
 case class SvgDrawingContext(override val width: Int, override val height: Int) extends AbstractDrawingContext {
-  private val opening = s"""<svg width="$width" height="$height" font-family="Eczar" font-size="13px">"""
+  private val opening = s"""
+    <svg width="$width" height="$height" font-family="Eczar" font-size="13px">
+    <filter id="dropShadow" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> <!-- stdDeviation is how much to blur -->
+      <feOffset dx="2" dy="2" result="offsetblur"/> <!-- how much to offset -->
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.5"/> <!-- slope is the opacity of the shadow -->
+      </feComponentTransfer>
+      <feMerge> 
+        <feMergeNode/> <!-- this contains the offset blurred image -->
+        <feMergeNode in="SourceGraphic"/> <!-- this contains the element that the filter is applied to -->
+      </feMerge>
+    </filter>
+  """
   private val builder = mutable.StringBuilder(opening)
 
   def clear(): Unit = {
@@ -13,6 +26,12 @@ case class SvgDrawingContext(override val width: Int, override val height: Int) 
 
   def withColor(color: Color)(thunk: => Unit): Unit = {
     builder ++= s"""<g color="$color" fill="$color">"""
+    thunk
+    builder ++= "</g>"
+  }
+
+  def withShadow(thunk: => Unit): Unit = {
+    builder ++= s"""<g filter="url(#dropShadow)">"""
     thunk
     builder ++= "</g>"
   }

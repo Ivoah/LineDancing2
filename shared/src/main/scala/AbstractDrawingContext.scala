@@ -3,6 +3,7 @@ trait AbstractDrawingContext {
   val height: Int
 
   def withColor(color: Color)(thunk: => Unit): Unit
+  def withShadow(thunk: => Unit): Unit
 
   def withTranslation(pos: (Double, Double))(thunk: => Unit): Unit
   def withRotation(angle: Double)(thunk: => Unit): Unit
@@ -17,6 +18,8 @@ trait AbstractDrawingContext {
 
 case class NullDrawingContext(val width: Int, val height: Int) extends AbstractDrawingContext {
   override def withColor(color: Color)(thunk: => Unit): Unit = thunk
+  override def withShadow(thunk: => Unit): Unit = thunk
+
   override def withTranslation(pos: (Double, Double))(thunk: => Unit): Unit = thunk
   override def withRotation(angle: Double)(thunk: => Unit): Unit = thunk
   override def drawString(str: String, x: Int, y: Int): Unit = ()

@@ -13,6 +13,8 @@ case class Graphics2DDrawingContext(g: Graphics2D) extends AbstractDrawingContex
     g.setPaint(paint)
   }
 
+  def withShadow(thunk: => Unit): Unit = thunk
+
   def withTranslation(pos: (Double, Double))(thunk: => Unit): Unit = {
     val transform = g.getTransform
     g.translate(pos._1, pos._2)

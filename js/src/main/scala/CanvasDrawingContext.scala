@@ -2,6 +2,10 @@ import org.scalajs.dom.CanvasRenderingContext2D
 
 case class CanvasDrawingContext(ctx: CanvasRenderingContext2D, scale: Double) extends AbstractDrawingContext {
   ctx.font = "13px Eczar"
+  ctx.shadowOffsetX = 5
+  ctx.shadowOffsetY = 5
+  ctx.shadowBlur = 15
+
   val width: Int = (ctx.canvas.width/scale).toInt
   val height: Int = (ctx.canvas.height/scale).toInt
 
@@ -12,6 +16,12 @@ case class CanvasDrawingContext(ctx: CanvasRenderingContext2D, scale: Double) ex
     ctx.fillStyle = color.toString()
     thunk
     ctx.restore()
+  }
+
+  def withShadow(thunk: => Unit): Unit = {
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)"
+    thunk
+    ctx.shadowColor = ""
   }
 
   def withTranslation(pos: (Double, Double))(thunk: => Unit): Unit = {
