@@ -13,7 +13,7 @@ class LineDancing2 extends MainFrame {
   private val mainFrame: MainFrame = this
 
   private var num_couples: Int = 6
-  private var visualizer: Option[Visualizer] = None
+  private var visualizer: Visualizer = Visualizer(Dance.Empty, num_couples)
   private var song: Option[Clip] = None
 
   private val canvas = new Component {
@@ -26,7 +26,7 @@ class LineDancing2 extends MainFrame {
       g.clearRect(0, 0, g.getClipBounds().width, g.getClipBounds().height)
 
       implicit val ctx: Graphics2DDrawingContext = Graphics2DDrawingContext(g)
-      visualizer.foreach(_.draw(song.get.getMicrosecondPosition / 1000))
+      visualizer.draw(song.map(_.getMicrosecondPosition).getOrElse(0L) / 1000)
     }
 
     mouse.clicks.reactions += {
@@ -108,7 +108,7 @@ class LineDancing2 extends MainFrame {
   def loadDance(path: Path): Unit = {
     val dance = Dance.fromYaml(Files.readString(path))
     val inputStream = AudioSystem.getAudioInputStream(path.getParent.resolve(dance.song).toFile)
-    visualizer = Some(Visualizer(dance, num_couples))
+    visualizer = Visualizer(dance, num_couples)
     song = Some(AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip])
     song.get.open(inputStream)
     progress.max = (song.get.getMicrosecondLength / 1000).toInt
@@ -117,7 +117,7 @@ class LineDancing2 extends MainFrame {
 
   def setNumCouples(new_num_couples: Int): Unit = {
     num_couples = new_num_couples
-    visualizer = visualizer.map(v => Visualizer(v.dance, num_couples))
+    visualizer = Visualizer(visualizer.dance, num_couples)
     canvas.repaint()
   }
 
