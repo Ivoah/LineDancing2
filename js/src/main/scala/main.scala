@@ -6,9 +6,15 @@ import org.scalajs.dom.html.{Canvas, Div, Button}
 import scala.scalajs.js.timers.*
 import scala.scalajs.js.Date
 
+import scalatags.JsDom.all.*
+
 @main
 def main(): Unit = {
-  val canvas = document.querySelector("canvas").asInstanceOf[Canvas]
+  val canvas = scalatags.JsDom.all.canvas(
+    widthA:=640,
+    heightA:=480,
+    display:="none"
+  ).render
   val dpr = window.devicePixelRatio
   canvas.width = (canvas.width*dpr).toInt
   canvas.height = (canvas.height*dpr).toInt
@@ -17,7 +23,7 @@ def main(): Unit = {
     ctx.scale(dpr, dpr)
     ctx
   }, dpr)
-  val svgContainer = document.getElementById("svgContainer").asInstanceOf[Div]
+  val svgContainer = div.render
   val svgCtx = SvgDrawingContext(640, 480)
 
   val dance = Dance.fromYaml("""song: Hole in the Wall.wav
@@ -35,36 +41,67 @@ steps:
 """)
   val visualizer = Visualizer(dance, 6)
 
-  val audioElement = document.querySelector("audio").asInstanceOf[Audio]
+  val audioElement = audio(
+    attr("controls").empty,
+    attr("preload"):="auto",
+    source(src:="dances/Hole in the Wall.wav")
+  ).render
 
+  var lastTime = -1.0
   def updateAnimation(ts: Double): Unit = {
-    if (canvas.style.display != "none") {
-      canvasCtx.clear()
-      visualizer.draw(audioElement.currentTime*1000)(canvasCtx)
+    if (audioElement.currentTime != lastTime) {
+      if (canvas.style.display != "none") {
+        canvasCtx.clear()
+        visualizer.draw(audioElement.currentTime*1000)(canvasCtx)
+      }
+
+      if (svgContainer.style.display != "none") {
+        svgCtx.clear()
+        visualizer.draw(audioElement.currentTime*1000)(svgCtx)
+        svgContainer.innerHTML = svgCtx.render()
+      }
     }
 
-    if (svgContainer.style.display != "none") {
-      svgCtx.clear()
-      visualizer.draw(audioElement.currentTime*1000)(svgCtx)
-      svgContainer.innerHTML = svgCtx.render()
+    lastTime = audioElement.currentTime
+    window.requestAnimationFrame(updateAnimation _)
+  }
+
+  window.requestAnimationFrame(updateAnimation _)
+
+  val clickBox = div(
+    `id`:="clickBox",
+    onclick := { () =>
+      if (audioElement.paused) audioElement.play()
+      else audioElement.pause()
     }
-    window.requestAnimationFrame(updateAnimation)
-  }
+  ).render
 
-  window.requestAnimationFrame(updateAnimation)
+  val canvasBtn = button(
+    "canvas",
+    onclick := { () =>
+      lastTime = -1.0
+      svgContainer.style.display = "none"
+      canvas.style.display = ""
+    }
+  ).render
 
-  document.getElementById("clickBox").asInstanceOf[Div].onclick = { _ =>
-    if (audioElement.paused) audioElement.play()
-    else audioElement.pause()
-  }
+  val svgBtn = button(
+    "svg",
+    onclick := { () =>
+      lastTime = -1.0
+      canvas.style.display = "none"
+      svgContainer.style.display = ""
+    }
+  ).render
 
-  document.getElementById("btnCanvas").asInstanceOf[Button].onclick = { _ =>
-    svgContainer.style.display = "none"
-    canvas.style.display = ""
-  }
-
-  document.getElementById("btnSvg").asInstanceOf[Button].onclick = { _ =>
-    canvas.style.display = "none"
-    svgContainer.style.display = ""
-  }
+  document.body.append(
+    canvasBtn,
+    svgBtn,
+    div(
+      clickBox,
+      canvas,
+      svgContainer
+    ).render,
+    audioElement
+  )
 }

@@ -1,0 +1,23 @@
+@import url('https://ivoah.net/common.css');
+
+@font-face {
+    font-family: Eczar;
+    src: url(Eczar.ttf);
+}
+
+div, canvas {
+    width: 640px;
+    height: 480px;
+    display: block;
+    margin: auto;
+}
+
+audio {
+    width: 640px;
+    margin-top: 5px;
+}
+
+#clickBox {
+    position: absolute;
+    z-index: 1;
+}

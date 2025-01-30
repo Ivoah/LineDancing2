@@ -2,43 +2,9 @@
 <html>
     <head>
         <title>Line Dancing</title>
-        <style>
-            @import url('https://ivoah.net/common.css');
-
-            @font-face {
-                font-family: Eczar;
-                src: url(Eczar.ttf);
-            }
-
-            div, canvas {
-                width: 640px;
-                height: 480px;
-                display: block;
-                margin: auto;
-            }
-
-            audio {
-                width: 640px;
-                margin-top: 5px;
-            }
-
-            #clickBox {
-                position: absolute;
-                z-index: 1;
-            }
-        </style>
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <button id="btnCanvas">canvas</button>
-        <button id="btnSvg">svg</button>
-        <div>
-            <div id="clickBox"></div>
-            <canvas width="640" height="480" style="display: none;"></canvas>
-            <div id="svgContainer"></div>
-        </div>
-        <audio controls preload="auto">
-            <source src="dances/Hole in the Wall.wav">
-        </audio>
         <script type="text/javascript" src="js/target/scala-3.3.4/linedancing2-fastopt/main.js"></script>
     </body>
 </html>
