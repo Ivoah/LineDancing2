@@ -18,6 +18,7 @@ case class Visualizer(dance: Dance, num_couples: Int) {
     ))
   }
 
+  private var lastDraw = System.currentTimeMillis()
   def draw(ms: Double)(implicit ctx: AbstractDrawingContext): Unit = {
     val count = dance.ms_to_count(ms)
     val range = dance.range_at(count).getOrElse(0 until 0)
@@ -48,7 +49,9 @@ case class Visualizer(dance: Dance, num_couples: Int) {
       }
     }
 
-    ctx.drawString(f"${dance.ms_to_count(ms)}%.2fc", 3, ctx.height - 15)
-    ctx.drawString(s"${ms.toInt}ms", 3, ctx.height)
+    ctx.drawString(f"${dance.ms_to_count(ms)}%.2fc", 3, ctx.height - 30)
+    ctx.drawString(s"${ms.toInt}ms", 3, ctx.height - 15)
+    ctx.drawString(f"${1000.0/(System.currentTimeMillis() - lastDraw)}%.2f FPS", 3, ctx.height)
+    lastDraw = System.currentTimeMillis()
   }
 }
