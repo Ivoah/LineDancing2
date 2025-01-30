@@ -16,12 +16,14 @@ class LineDancing2 extends MainFrame {
   private var visualizer: Option[Visualizer] = None
   private var song: Option[Clip] = None
 
-  private val graphicsPanel = new Panel {
+  private val canvas = new Component {
     font = Font.createFont(Font.TRUETYPE_FONT, new File("Eczar.ttf")).deriveFont(13.0f)
 
+    private val BACKGROUND = java.awt.Color(252, 245, 229)
     override def paintComponent(g: Graphics2D): Unit = {
-      super.paintComponent(g)
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+      g.setBackground(BACKGROUND)
+      g.clearRect(0, 0, g.getClipBounds().width, g.getClipBounds().height)
 
       implicit val ctx: Graphics2DDrawingContext = Graphics2DDrawingContext(g)
       visualizer.foreach(_.draw(song.get.getMicrosecondPosition / 1000))
@@ -97,7 +99,7 @@ class LineDancing2 extends MainFrame {
   }
 
   contents = new BorderPanel {
-    layout(graphicsPanel) = BorderPanel.Position.Center
+    layout(canvas) = BorderPanel.Position.Center
     layout(progress) = BorderPanel.Position.South
   }
 
@@ -105,20 +107,18 @@ class LineDancing2 extends MainFrame {
 
   def loadDance(path: Path): Unit = {
     val dance = Dance.fromYaml(Files.readString(path))
-    val new_visualizer = Visualizer(dance, num_couples)
     val inputStream = AudioSystem.getAudioInputStream(path.getParent.resolve(dance.song).toFile)
-    val new_song: Clip = AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip]
-    new_song.open(inputStream)
-    progress.max = (new_song.getMicrosecondLength / 1000).toInt
-    visualizer = Some(new_visualizer)
-    song = Some(new_song)
-    graphicsPanel.repaint()
+    visualizer = Some(Visualizer(dance, num_couples))
+    song = Some(AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip])
+    song.get.open(inputStream)
+    progress.max = (song.get.getMicrosecondLength / 1000).toInt
+    canvas.repaint()
   }
 
   def setNumCouples(new_num_couples: Int): Unit = {
     num_couples = new_num_couples
     visualizer = visualizer.map(v => Visualizer(v.dance, num_couples))
-    graphicsPanel.repaint()
+    canvas.repaint()
   }
 
   def setMicrosecondPosition(µs: Long): Unit = {
@@ -137,7 +137,7 @@ class LineDancing2 extends MainFrame {
   }
 
   private val timer: Timer = new Timer(10, _ => {
-    graphicsPanel.repaint()
+    canvas.repaint()
     progress.value = song.map(s => (s.getMicrosecondPosition / 1000).toInt).getOrElse(0)
   })
 }
