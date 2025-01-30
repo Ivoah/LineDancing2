@@ -1,10 +1,12 @@
 "Sit": nil
 "(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)":
-  (if (= (= (% (dancer.couple count) 2) 0) (= couple "1st"))
-    (map
-      "x" (* (+ (/ (- (cos (* t Pi))) 2) 0.5) places (if (= direction "up") -1 1))
-      "y" (* (/ (sin (* t Pi)) 3) (if dancer.woman -1 1))
-      "r" (* (- t) Pi 2 (if dancer.woman -1 1) (if (= direction "up") -1 1))
+  (fn (dancer count t)
+    (if (= (= (% ((. dancer couple) count) 2) 0) (= couple "1st"))
+      (seq
+        (* (+ (/ (- (cos (* t Pi))) 2) 0.5) (float places) (if (= direction "up") -1 1))
+        (* (/ (sin (* t Pi)) 3) (if (. dancer woman) -1 1))
+        (* (- t) Pi 2 (if (. dancer woman) -1 1) (if (= direction "up") -1 1))
+      )
+      nil
     )
-    nil
   )

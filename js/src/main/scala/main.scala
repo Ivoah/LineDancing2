@@ -56,7 +56,6 @@ steps:
   document.getElementById("clickBox").asInstanceOf[Div].onclick = { _ =>
     if (audioElement.paused) audioElement.play()
     else audioElement.pause()
-    audioElement.focus(new FocusOptions{focusVisible = false})
   }
 
   document.getElementById("btnCanvas").asInstanceOf[Button].onclick = { _ =>
