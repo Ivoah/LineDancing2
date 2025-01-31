@@ -164,13 +164,16 @@ implicit val stdlib: Environment = Map(
   "seq" -> VarArgs(identity),
   "Pi" -> math.Pi,
   "cos" -> math.cos,
-  "sin" -> math.sin
+  "sin" -> math.sin,
+  "match" -> VarArgs {
+    case Seq(target, cases*) => cases.grouped(2).find(c => c.head == target).map(_.last).getOrElse(null)
+  }
 )
 
 @main
 def lispTest() = {
   val code = """
-    (+ (. obj baz) 13)
+    (match "baz" "foo" 4 "bar" 9)
   """
   val ast = parse(code)
   println(ast)

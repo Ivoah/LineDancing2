@@ -19,15 +19,22 @@ val stepsYaml = """
       nil
     )
   )
+"Turn single (?<direction>left|right)":
+  (fn (dancer count t)
+    (match direction
+      "left" (seq 0 0 (- (* t 2 Pi)))
+      "right" (seq 0 0 (* t 2 Pi))
+    )
+  )
 """
 
 object Steps {
   type Step = (Dancer, Double, Double) => Option[((Double, Double), Double)]
   
   val steps: Map[String, Map[String, String] => Step] = Map[String, Map[String, String] => Step](
-    raw"Sit" -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
-      None
-    }),
+    // raw"Sit" -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
+    //   None
+    // }),
 
     // raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)" -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
     //   if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
@@ -73,12 +80,12 @@ object Steps {
       }, t*math.Pi))
     }),
 
-    raw"Turn single (?<direction>left|right)" -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
-      Some(((0, 0), meta("direction") match {
-        case "left" => -t*2*Pi
-        case "right" => t*2*Pi
-      }))
-    })
+    // raw"Turn single (?<direction>left|right)" -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
+    //   Some(((0, 0), meta("direction") match {
+    //     case "left" => -t*2*Pi
+    //     case "right" => t*2*Pi
+    //   }))
+    // })
   ) ++ stepsYaml.as[Map[String, String]].toOption.get.map {
     case (re, code) =>
       val ast = lisp.parse(code)
