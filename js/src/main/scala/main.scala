@@ -5,8 +5,16 @@ import org.scalajs.dom.html.{Canvas, Div, Button}
 
 import scala.scalajs.js.timers.*
 import scala.scalajs.js.Date
+import scala.scalajs.js.Thenable.Implicits.*
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scalatags.JsDom.all.*
+
+val DANCES_DIR = "dances/"
+val DANCES = Seq(
+  "dances/Hole in the Wall.yaml",
+  "dances/Sunlight Through Draperies.yaml"
+)
 
 @main
 def main(): Unit = {
@@ -26,26 +34,12 @@ def main(): Unit = {
   val svgContainer = div.render
   val svgCtx = SvgDrawingContext(640, 480)
 
-  val dance = Dance.fromYaml("""song: Hole in the Wall.wav
-marks: [1600, 33400, 66000, 98640, 131360, 162800, 194600, 226000]
-
-steps:
-  - 1st couple cast down 2 (4 counts)
-  - 1st couple lead up 2 (8 counts)
-  - 2nd couple cast up 2 (4 counts)
-  - 2nd couple lead down 2 (8 counts)
-  - 1st corners cross right shoulders (6 counts)
-  - 2nd corners cross right shoulders (6 counts)
-  - Circle left halfway (6 counts)
-  - 1st couple cast down 1 while 2nd couple lead up 1 (6 counts)
-""")
-  val visualizer = Visualizer(dance, 6)
-
   val audioElement = audio(
     attr("controls").empty,
     attr("preload"):="auto",
-    source(src:="dances/Hole in the Wall.wav")
   ).render
+
+  var visualizer = Visualizer(Dance.Empty, 6)
 
   var lastTime = -1.0
   def updateAnimation(ts: Double): Unit = {
@@ -66,14 +60,23 @@ steps:
     window.requestAnimationFrame(updateAnimation _)
   }
 
-  window.requestAnimationFrame(updateAnimation _)
-
-  val clickBox = div(
-    `id`:="clickBox",
-    onclick := { () =>
-      if (audioElement.paused) audioElement.play()
-      else audioElement.pause()
+  def loadDance(path: String): Unit = {
+    fetch(path).flatMap(r => r.text()).foreach { t =>
+      val dance = Dance.fromYaml(t)
+      audioElement.src = DANCES_DIR + dance.song
+      audioElement.load()
+      visualizer = Visualizer(dance, visualizer.num_couples)
+      lastTime = -1.0
     }
+  }
+
+  val danceSelect = frag(
+    label(`for`:="danceSelect", "Dance: "),
+    select(
+      `id`:="danceSelect",
+      DANCES.map(d => option(`value`:=d, d.stripPrefix(DANCES_DIR).stripSuffix(".yaml"))),
+      onchange := { (e: Event) => loadDance(e.currentTarget.asInstanceOf[HTMLSelectElement].value)}
+    )
   ).render
 
   val canvasBtn = button(
@@ -94,7 +97,19 @@ steps:
     }
   ).render
 
+  val clickBox = div(
+    `id`:="clickBox",
+    onclick := { () =>
+      if (audioElement.paused) audioElement.play()
+      else audioElement.pause()
+    }
+  ).render
+
+  loadDance(DANCES.head)
+  window.requestAnimationFrame(updateAnimation _)
+
   document.body.append(
+    danceSelect,
     canvasBtn,
     svgBtn,
     div(
