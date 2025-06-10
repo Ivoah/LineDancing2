@@ -60,9 +60,9 @@ object Steps {
 
     raw"(?<corners>1st|2nd) corners cross right shoulders" -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
       ((dancer.couple(count)%2, dancer.woman, meta("corners")) match {
-        case (1, true, "1st") => Some((1.0, 1.0))
+        case (1, true, "1st")  => Some((1.0, 1.0))
         case (0, false, "1st") => Some((-1.0, -1.0))
-        case (0, true, "2nd") => Some((-1.0, 1.0))
+        case (0, true, "2nd")  => Some((-1.0, 1.0))
         case (1, false, "2nd") => Some((1.0, -1.0))
         case _ => None
       }).map(corner => (
@@ -75,8 +75,9 @@ object Steps {
       Some(((dancer.couple(count)%2, dancer.woman) match {
         case (1, false) => (sin(t*Pi/2), -cos(t*Pi/2) + 1)
         case (0, false) => (cos(t*Pi/2) - 1, sin(t*Pi/2))
-        case (0, true) => (-sin(t*Pi/2), cos(t*Pi/2) - 1)
-        case (1, true) => (-cos(t*Pi/2) + 1, -sin(t*Pi/2))
+        case (0, true)  => (-sin(t*Pi/2), cos(t*Pi/2) - 1)
+        case (1, true)  => (-cos(t*Pi/2) + 1, -sin(t*Pi/2))
+        case _ => (0, 0) // Silence non-exhaustive match warning
       }, t*math.Pi))
     }),
 
