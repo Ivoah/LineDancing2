@@ -1,5 +1,4 @@
-project/
-target/
+out/
 .bsp/
 .idea/
 .DS_Store
