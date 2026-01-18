@@ -54,6 +54,7 @@ object Names {
     "Noah",
     "Paul",
     "Philip",
+    "Soren",
     "Thaddaeus",
     "Tim",
     "Treker",

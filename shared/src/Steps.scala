@@ -3,35 +3,40 @@ import Extensions.*
 import scala.math.*
 import scala.util.matching.Regex
 
-import org.virtuslab.yaml.{StringOps, YamlCodec}
 import net.ivoah.lisp
-
-val stepsYaml = """
-"Sit": nil
-"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)":
-  (fn (dancer count t)
-    (if (= (= (% ((. dancer couple) count) 2) 0) (= couple "1st"))
-      (seq
-        (* (+ (/ (- (cos (* t Pi))) 2) 0.5) (float places) (if (= direction "up") -1 1))
-        (* (/ (sin (* t Pi)) 3) (if (. dancer woman) -1 1))
-        (* (- t) Pi 2 (if (. dancer woman) -1 1) (if (= direction "up") -1 1))
-      )
-      nil
-    )
-  )
-"Turn single (?<direction>left|right)":
-  (fn (dancer count t)
-    (match direction
-      "left" (seq 0 0 (- (* t 2 Pi)))
-      "right" (seq 0 0 (* t 2 Pi))
-    )
-  )
-"""
 
 object Steps {
   type Step = (Dancer, Double, Double) => Option[((Double, Double), Double)]
+
+  private val lispSteps = Map(
+    "Sit" -> "nil",
+    raw"(?<couple>1st|2nd) couple cast (?<direction>up|down) (?<places>\d+)" -> """
+      (fn (dancer count t)
+        (if (= (= (% ((. dancer couple) count) 2) 0) (= couple "1st"))
+          (seq
+            (* (+ (/ (- (cos (* t Pi))) 2) 0.5) (float places) (if (= direction "up") -1 1))
+            (* (/ (sin (* t Pi)) 3) (if (. dancer woman) -1 1))
+            (* (- t) Pi 2 (if (. dancer woman) -1 1) (if (= direction "up") -1 1))
+          )
+          nil
+        )
+      )""",
+    raw"Turn single (?<direction>left|right)" -> """
+      (fn (dancer count t)
+        (match direction
+          "left" (seq 0 0 (- (* t 2 Pi)))
+          "right" (seq 0 0 (* t 2 Pi))
+        )
+      )"""
+  ).map { case (re, code) =>
+    val ast = lisp.parse(code)
+    re.r -> ((meta: Map[String, String]) => {
+      val fn = ast.eval(lisp.stdlib ++ meta).asInstanceOf[Function3[Map[String, lisp.Value], Double, Double, Seq[Double]]]
+      (dancer: Dancer, count: Double, t: Double) => Option(fn(Map("couple" -> dancer.couple, "woman" -> dancer.woman), count, t)).map{case Seq(x, y, r) => ((x, y), r)}
+    })
+  }
   
-  val steps: Map[String, Map[String, String] => Step] = Map[String, Map[String, String] => Step](
+  private val scalaSteps = Map[Regex, Map[String, String] => Step](
     // raw"Sit" -> ((meta: String => String) => (dancer: Dancer, count: Double, t: Double) => {
     //   None
     // }),
@@ -47,7 +52,7 @@ object Steps {
     //   else None
     // }),
 
-    raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)" -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
+    raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)".r -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
       if (dancer.couple(count)%2 == 0 == (meta("couple") == "1st")) Some((
           (
             (-cos(t*Pi)/2 + 0.5)*meta("places").toInt*(if (meta("direction") == "up") -1 else 1),
@@ -58,7 +63,7 @@ object Steps {
       else None
     }),
 
-    raw"(?<corners>1st|2nd) corners cross right shoulders" -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
+    raw"(?<corners>1st|2nd) corners cross right shoulders".r -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
       ((dancer.couple(count)%2, dancer.woman, meta("corners")) match {
         case (1, true, "1st")  => Some((1.0, 1.0))
         case (0, false, "1st") => Some((-1.0, -1.0))
@@ -71,7 +76,7 @@ object Steps {
       ))
     }),
 
-    raw"Circle (?<direction>left|right) halfway" -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
+    raw"Circle (?<direction>left|right) halfway".r -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
       Some(((dancer.couple(count)%2, dancer.woman) match {
         case (1, false) => (sin(t*Pi/2), -cos(t*Pi/2) + 1)
         case (0, false) => (cos(t*Pi/2) - 1, sin(t*Pi/2))
@@ -81,20 +86,19 @@ object Steps {
       }, t*math.Pi))
     }),
 
+    raw"(?<corners>1st|2nd) corners back-to-back".r -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
+      None
+    })
+
     // raw"Turn single (?<direction>left|right)" -> ((meta: Map[String, String]) => (dancer: Dancer, count: Double, t: Double) => {
     //   Some(((0, 0), meta("direction") match {
     //     case "left" => -t*2*Pi
     //     case "right" => t*2*Pi
     //   }))
     // })
-  ) ++ stepsYaml.as[Map[String, String]].toOption.get.map {
-    case (re, code) =>
-      val ast = lisp.parse(code)
-      re -> ((meta: Map[String, String]) => {
-        val fn = ast.eval(lisp.stdlib ++ meta).asInstanceOf[Function3[Map[String, lisp.Value], Double, Double, Seq[Double]]]
-        (dancer: Dancer, count: Double, t: Double) => Option(fn(Map("couple" -> dancer.couple, "woman" -> dancer.woman), count, t)).map{case Seq(x, y, r) => ((x, y), r)}
-      })
-  }
+  )
+  
+  val steps: Map[Regex, Map[String, String] => Step] = scalaSteps ++ lispSteps
 }
 
 @main

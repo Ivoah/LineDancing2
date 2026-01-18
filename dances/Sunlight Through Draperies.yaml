@@ -2,7 +2,9 @@ song: Sunlight Through Draperies.wav
 marks: [6000, 53000, 102000, 150000, 198000, 246500, 294000, 342000]
 
 steps:
-  - Turn single right (12 counts) # - 1st corners back-to-back, turn single right (12 counts)
+  # 1st corners back-to-back, turn single right (12 counts)
+  - 1st corners back-to-back (8 counts)
+  - Turn single right (4 counts)
   - Turn single left (12 counts) # - Partners right gypsy (12 counts)
   - Turn single right (12 counts) # - 2nd corners back-to-back, turn single left (12 counts)
   - Turn single left (12 counts) # - Partners left gypsy (12 counts)
