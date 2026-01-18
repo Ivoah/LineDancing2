@@ -27,7 +27,18 @@ object Steps {
           "left" (seq 0 0 (- (* t 2 Pi)))
           "right" (seq 0 0 (* t 2 Pi))
         )
-      )"""
+      )""",
+      // raw"(?<couple>1st|2nd) couple lead (?<direction>up|down) (?<places>\d+)" -> """
+      //   (fn (dancer count t)
+      //     (if (= (= (% ((. dancer couple) count) 2) 0) (= couple "1st"))
+      //       (seq
+      //         (* (+ (/ (- (cos (* t Pi))) 2) 0.5) (int places) (if (= direction "up") -1 1))
+      //         (* (- (sin (* t Pi))) (/ 1 3) (if (. dancer woman) -1 1))
+      //         (* (sin (* t Pi)) Pi (/ 1 2) (if (. dancer woman) -1 1) (if (= direction "up") -1 1))
+      //       )
+      //       nil
+      //     )
+      //   )"""
   ).map { case (re, code) =>
     val ast = lisp.parse(code)
     re.r -> ((meta: Map[String, String]) => {
