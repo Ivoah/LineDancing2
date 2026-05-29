@@ -6,6 +6,7 @@ import java.nio.file.{Files, Path}
 import javax.sound.sampled.*
 import javax.swing.Timer
 import javax.swing.filechooser.FileNameExtensionFilter
+import scala.io.Source
 import scala.swing.*
 import scala.swing.event.*
 
@@ -17,7 +18,7 @@ class LineDancing2 extends MainFrame {
   private var song: Option[Clip] = None
 
   private val canvas = new Component {
-    font = Font.createFont(Font.TRUETYPE_FONT, new File("Eczar.ttf")).deriveFont(13.0f)
+    font = Font.createFont(Font.TRUETYPE_FONT, getClass.getResourceAsStream("Eczar.ttf")).deriveFont(13.0f)
 
     private val BACKGROUND = java.awt.Color(252, 245, 229)
     override def paintComponent(g: Graphics2D): Unit = {
@@ -68,17 +69,20 @@ class LineDancing2 extends MainFrame {
 
   menuBar = new MenuBar {
     contents ++= Seq(
-      new Menu("File") {
-        contents ++= Seq(
-          new MenuItem(Action("Load dance") {
-            val chooser = new FileChooser(new File("."))
-            chooser.fileFilter = new FileNameExtensionFilter("YAML files", "yml", "yaml")
-            if (chooser.showOpenDialog(this) == FileChooser.Result.Approve) {
-              song.foreach(_.close())
-              loadDance(chooser.selectedFile.toPath)
-            }
+      new Menu("Dances") {
+        contents ++= upickle.read[Seq[String]](getClass.getResourceAsStream("allDances.json")).map { dance =>
+          new MenuItem(Action(dance.stripSuffix(".yaml")) {
+            loadDance(dance)
           })
-        )
+        }
+        :+ new MenuItem(Action("From file...") {
+          val chooser = new FileChooser(new File("."))
+          chooser.fileFilter = new FileNameExtensionFilter("YAML files", "yml", "yaml")
+          if (chooser.showOpenDialog(this) == FileChooser.Result.Approve) {
+            loadDance(chooser.selectedFile.toPath)
+          }
+        })
+        
       },
       new Menu("Options") {
         contents ++= Seq(
@@ -105,9 +109,16 @@ class LineDancing2 extends MainFrame {
 
   title = "Line Dancing"
 
-  def loadDance(path: Path): Unit = {
-    val dance = Dance.fromYaml(Files.readString(path))
-    val inputStream = AudioSystem.getAudioInputStream(path.getParent.resolve(dance.song).toFile)
+  def loadDance(file: Path | String): Unit = {
+    song.foreach(_.close())
+    val dance = Dance.fromYaml(file match {
+      case path: Path => Files.readString(path)
+      case resource: String => Source.fromResource(resource).mkString
+    })
+    val inputStream = file match {
+      case path: Path => AudioSystem.getAudioInputStream(path.getParent.resolve(dance.song).toFile)
+      case _: String => AudioSystem.getAudioInputStream(getClass.getResourceAsStream(dance.song))
+    }
     visualizer = Visualizer(dance, num_couples)
     song = Some(AudioSystem.getLine(new DataLine.Info(classOf[Clip], inputStream.getFormat)).asInstanceOf[Clip])
     song.get.open(inputStream)

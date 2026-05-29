@@ -17,6 +17,8 @@ object shared extends Module {
     )
   }
 
+  def dances: T[PathRef] = Task.Source("dances")
+
   object jvm extends SharedModule
   object js extends SharedModule, AppScalaJSModule
 }
@@ -33,6 +35,16 @@ object jvm extends AppScalaModule {
   def moduleDeps = Seq(shared.jvm)
   def mvnDeps = Seq(
     mvn"org.scala-lang.modules::scala-swing:3.0.0",
-    mvn"org.rogach::scallop:4.1.0"
+    mvn"org.rogach::scallop:4.1.0",
+    mvn"com.lihaoyi::upickle:4.4.3"
   )
+
+  private def allDances = Task {
+    os.write(Task.dest / "allDances.json", upickle.write(os.list(shared.dances().path).filter(_.ext == "yaml").map(_.last)))
+    PathRef(Task.dest)
+  }
+
+  override def resources: T[Seq[PathRef]] = Task {
+    super.resources() :+ shared.dances() :+ allDances()
+  }
 }

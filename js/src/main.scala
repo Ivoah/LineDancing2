@@ -10,10 +10,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import scalatags.JsDom.all.*
 
-val DANCES_DIR = "dances/"
+val DANCES_DIR = "shared/dances/"
 val DANCES = Seq(
-  "dances/Hole in the Wall.yaml",
-  "dances/Sunlight Through Draperies.yaml"
+  "shared/dances/Hole in the Wall.yaml",
+  "shared/dances/Sunlight Through Draperies.yaml"
 )
 
 @main
